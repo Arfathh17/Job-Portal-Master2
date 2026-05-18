@@ -57,19 +57,30 @@ export default function RecruiterDashboard() {
   };
 
   return (
-    <MotionPage className="mx-auto max-w-7xl px-5 pb-12 pt-8">
-      <section className="mb-6 grid gap-4 md:grid-cols-3">
-        <StatCard label="Active Jobs" value={jobs.length} icon={Briefcase} />
-        <StatCard label="Applications" value={applications.length} icon={UsersRound} tone="purple" />
-        <StatCard label="Hiring pulse" value="Live" icon={Sparkles} tone="emerald" />
+    <MotionPage className="mx-auto max-w-7xl px-5 pb-16 pt-8">
+      <section className="cinematic-stage mb-6 rounded-[1.5rem] p-6 sm:p-8">
+        <div className="grid gap-8 lg:grid-cols-[1fr_440px] lg:items-end">
+          <div>
+            <NeonBadge><Sparkles size={14} /> Recruiter control room</NeonBadge>
+            <h1 className="dashboard-title mt-6 max-w-4xl font-black uppercase text-white">Shape roles with sharper signal.</h1>
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-300">
+              Publish clean briefs, watch candidate flow, and keep every open role feeling intentional.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
+            <StatCard label="Active Jobs" value={jobs.length} icon={Briefcase} />
+            <StatCard label="Applications" value={applications.length} icon={UsersRound} tone="purple" />
+            <StatCard label="Hiring pulse" value="Live" icon={Sparkles} tone="emerald" />
+          </div>
+        </div>
       </section>
 
       <section className="grid gap-5 lg:grid-cols-[minmax(0,1.05fr)_430px]">
-        <GlassCard className="p-5 sm:p-6">
+        <GlassCard className="p-5 sm:p-6" hover={false}>
           <NeonBadge><PenLine size={14} /> Role brief</NeonBadge>
           <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="text-3xl font-black tracking-tight text-stone-50">Shape the opening</h1>
+              <h2 className="afai-wordmark text-3xl font-black text-stone-50">Build the opening</h2>
               <p className="mt-2 max-w-xl text-sm leading-6 text-slate-400">Write a clean role brief, publish it, and let the workspace keep the candidate flow visible.</p>
             </div>
           </div>
@@ -93,7 +104,7 @@ export default function RecruiterDashboard() {
                 <option value="internship">Internship</option>
               </select>
               <label className="flex items-center gap-2 text-sm font-semibold text-slate-300">
-                <input name="remote" type="checkbox" checked={form.remote} onChange={update} className="h-4 w-4 accent-sky-200" />
+                <input name="remote" type="checkbox" checked={form.remote} onChange={update} className="h-4 w-4 accent-violet-400" />
                 Remote role
               </label>
             </div>
@@ -103,12 +114,12 @@ export default function RecruiterDashboard() {
         </GlassCard>
 
         <aside className="space-y-5">
-          <GlassCard className="p-5">
-            <h2 className="text-lg font-black text-stone-50">Open roles</h2>
+          <GlassCard className="p-5" hover={false}>
+            <h2 className="afai-wordmark text-xl font-black text-stone-50">Open roles</h2>
             <div className="mt-4 space-y-3">
               {jobs.length === 0 && <p className="text-sm text-slate-400">No jobs posted yet.</p>}
               {jobs.map((job, index) => (
-                <div key={job._id} className="premium-card flex gap-3 p-3">
+                <div key={job._id} className="luxury-table-row premium-card flex gap-3 p-3">
                   <span className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/[0.055] text-xs font-black text-slate-400">{index + 1}</span>
                   <div>
                   <p className="font-bold text-stone-50">{job.title}</p>
@@ -119,18 +130,18 @@ export default function RecruiterDashboard() {
             </div>
           </GlassCard>
 
-          <GlassCard className="p-5">
+          <GlassCard className="p-5" hover={false}>
             <div className="flex items-center gap-2">
-              <UsersRound className="text-sky-100" size={22} />
-              <h2 className="text-lg font-black text-stone-50">Candidate flow</h2>
+              <UsersRound className="text-violet-700" size={22} />
+              <h2 className="afai-wordmark text-xl font-black text-stone-50">Candidate flow</h2>
             </div>
             <div className="mt-4 space-y-3">
               {applications.length === 0 && <p className="text-sm text-slate-400">No candidate applications yet.</p>}
               {applications.map(application => (
-                <div key={application._id || `${application.job?._id}-${application.appliedAt}`} className="premium-card p-3 text-sm">
+                <div key={application._id || `${application.job?._id}-${application.appliedAt}`} className="luxury-table-row premium-card p-3 text-sm">
                   <p className="font-bold text-stone-50">{application.candidate?.name || 'Candidate'}</p>
                   <p className="text-slate-400">{application.job?.title || application.job?.company}</p>
-                  <p className="mt-1 text-xs font-black uppercase tracking-[0.18em] text-sky-100">{application.status || 'pending'}</p>
+                  <p className="mt-1 text-xs font-black uppercase tracking-[0.18em] text-violet-700">{application.status || 'pending'}</p>
                 </div>
               ))}
             </div>

@@ -48,21 +48,29 @@ export default function ResumeAnalyzer() {
   const score = analysis?.atsScore || analysis?.score || 0;
 
   return (
-    <MotionPage className="mx-auto max-w-7xl px-5 pb-12 pt-8">
+    <MotionPage className="mx-auto max-w-7xl px-5 pb-16 pt-8">
+      <section className="cinematic-stage mb-6 rounded-[1.5rem] p-6 sm:p-8">
+        <NeonBadge><Sparkles size={14} /> Resume intelligence</NeonBadge>
+        <h1 className="dashboard-title mt-6 max-w-5xl font-black uppercase text-white">Turn your resume into a sharper signal.</h1>
+        <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-300">
+          ATS scoring, strength detection, gaps, and role recommendations in one focused review surface.
+        </p>
+      </section>
+
       <div className="grid gap-5 lg:grid-cols-[1fr_380px]">
-        <GlassCard className="p-5 sm:p-6">
+        <GlassCard className="p-5 sm:p-6" hover={false}>
           <div className="flex items-center gap-3">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.055] text-sky-100">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/80 text-violet-700">
               <FileText size={24} />
             </span>
             <div>
-              <NeonBadge><Sparkles size={14} /> Resume analyzer</NeonBadge>
-              <h1 className="mt-2 text-3xl font-black tracking-tight text-white">ATS, skills, and role recommendation</h1>
+              <NeonBadge>Analyzer console</NeonBadge>
+              <h2 className="afai-wordmark mt-2 text-3xl font-black text-white">Paste the raw resume text</h2>
             </div>
           </div>
           <form onSubmit={analyze} className="mt-6">
             <div className="relative">
-              {isAnalyzing && <div className="pointer-events-none absolute inset-x-4 top-4 h-px animate-pulse bg-gradient-to-r from-transparent via-sky-100 to-transparent shadow-[0_12px_28px_rgba(186,230,253,0.2)]" />}
+              {isAnalyzing && <div className="pointer-events-none absolute inset-x-4 top-4 h-px animate-pulse bg-gradient-to-r from-transparent via-violet-300 to-transparent shadow-[0_12px_28px_rgba(109,40,217,0.14)]" />}
               <textarea value={resumeText} onChange={event => setResumeText(event.target.value)} className="field min-h-[360px]" placeholder="Paste resume text here..." required />
             </div>
             {error && <p className="mt-3 rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-sm text-amber-100">{error}</p>}
@@ -74,13 +82,13 @@ export default function ResumeAnalyzer() {
         </GlassCard>
 
         <GlassCard className="p-5" hover={false}>
-          <h2 className="flex items-center gap-2 text-lg font-black text-white"><Radar className="text-sky-100" size={20} /> Analysis</h2>
+          <h2 className="afai-wordmark flex items-center gap-2 text-xl font-black text-white"><Radar className="text-violet-700" size={20} /> Analysis</h2>
           {!analysis && <p className="mt-3 text-sm leading-6 text-slate-400">Paste resume text to generate ATS score and role recommendations.</p>}
           {analysis && (
             <div className="mt-5 space-y-5">
               <div className="grid place-items-center">
-                <div className="grid h-40 w-40 place-items-center rounded-full border border-white/10 bg-[conic-gradient(from_180deg,#dbeafe_var(--score),rgba(15,23,42,0.62)_0)] p-2 shadow-[0_24px_58px_rgba(0,0,0,0.26)]" style={{ '--score': `${score}%` }}>
-                  <div className="grid h-full w-full place-items-center rounded-full bg-slate-950/90">
+                <div className="grid h-40 w-40 place-items-center rounded-full border border-violet-200/70 bg-[conic-gradient(from_180deg,#a78bfa_var(--score),rgba(237,233,254,0.9)_0)] p-2 shadow-[0_24px_58px_rgba(109,40,217,0.14)]" style={{ '--score': `${score}%` }}>
+                  <div className="grid h-full w-full place-items-center rounded-full bg-white/95">
                     <p className="text-center text-4xl font-black text-white">{score}<span className="text-sm text-slate-500">/100</span></p>
                   </div>
                 </div>

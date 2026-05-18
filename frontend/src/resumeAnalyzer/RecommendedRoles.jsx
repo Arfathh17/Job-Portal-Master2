@@ -6,10 +6,10 @@ function InfoList({ icon: Icon, title, items }) {
   if (!items?.length) return null;
 
   return (
-    <GlassCard className="p-4">
+    <GlassCard className="p-4" hover={false}>
       <div className="flex items-center gap-2">
-        <Icon className="text-sky-100" size={19} />
-        <h3 className="font-black text-white">{title}</h3>
+        <Icon className="text-violet-700" size={19} />
+        <h3 className="afai-wordmark font-black text-white">{title}</h3>
       </div>
       <ul className="mt-3 space-y-1 text-sm text-slate-400">
         {items.map(item => <li key={item}>- {item}</li>)}
@@ -24,11 +24,11 @@ export default function RecommendedRoles({ analysis }) {
 
   return (
     <section className="space-y-5">
-      <GlassCard className="p-5">
+      <GlassCard className="cinematic-stage p-5" hover={false}>
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <NeonBadge>AI role recommendation</NeonBadge>
-            <h2 className="mt-3 text-2xl font-black text-white">{analysis.bestCareerPath || roles[0]?.role}</h2>
+            <h2 className="afai-wordmark mt-3 text-3xl font-black text-white">{analysis.bestCareerPath || roles[0]?.role}</h2>
             <p className="mt-2 text-sm text-slate-400">
               Estimated level: {analysis.estimatedExperienceLevel || 'Intermediate'}
             </p>

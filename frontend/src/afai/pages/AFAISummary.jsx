@@ -65,19 +65,19 @@ export default function AFAISummary() {
   }, [sessionId]);
 
   return (
-    <MotionPage className="pb-12">
+    <MotionPage className="pb-16">
       <header className="mx-auto max-w-7xl px-5 pt-8">
-        <GlassCard className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between">
+        <GlassCard className="cinematic-stage flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between" hover={false}>
           <div className="flex items-center gap-3">
             <button onClick={() => navigate('/afai/interview')} className="icon-btn" aria-label="Back to interview">
               <ArrowLeft size={18} />
             </button>
             <div>
               <NeonBadge>AFAI final report</NeonBadge>
-              <h1 className="mt-2 text-2xl font-black tracking-tight text-white">Interview performance summary</h1>
+              <h1 className="afai-wordmark mt-2 text-3xl font-black text-white">Interview performance summary</h1>
             </div>
           </div>
-          <button onClick={() => navigate('/afai')} className="inline-flex items-center gap-2 rounded-xl bg-stone-50 px-4 py-2 text-sm font-black text-slate-950 transition hover:bg-sky-100">
+          <button onClick={() => navigate('/afai')} className="contrast-action inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2 text-sm font-black text-white transition hover:bg-violet-900">
             <RotateCcw size={16} />
             New interview
           </button>
@@ -88,7 +88,7 @@ export default function AFAISummary() {
         <aside className="space-y-4">
           <GlassCard className="p-5">
             <div className="flex items-center gap-3">
-              <Gauge className="text-sky-100" size={23} />
+              <Gauge className="text-violet-700" size={23} />
               <h2 className="text-lg font-black text-white">Score</h2>
             </div>
             <p className="mt-4 text-4xl font-black text-white">{summary?.averageScore ?? '--'}<span className="text-base text-slate-500">/100</span></p>
@@ -97,7 +97,7 @@ export default function AFAISummary() {
 
           <GlassCard className="p-5">
             <div className="flex items-center gap-3">
-              <BadgeCheck className="text-sky-100" size={23} />
+              <BadgeCheck className="text-violet-700" size={23} />
               <h2 className="text-lg font-black text-white">Hiring signal</h2>
             </div>
             <p className="mt-4 text-sm leading-6 text-slate-300">{summary?.hiringRecommendation || 'Pending final analysis.'}</p>
@@ -106,7 +106,7 @@ export default function AFAISummary() {
 
         <GlassCard className="p-5">
           <div className="mb-5 flex items-center gap-3">
-            <BookOpenCheck className="text-sky-100" size={23} />
+            <BookOpenCheck className="text-violet-700" size={23} />
             <h2 className="text-lg font-black text-white">AFAI analysis</h2>
           </div>
 

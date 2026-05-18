@@ -20,7 +20,7 @@ export default function ScoreStrip({ stats }) {
   return (
     <div className="grid gap-3 sm:grid-cols-4">
       {items.map(([key, value]) => (
-        <GlassCard key={key} className="p-3">
+        <GlassCard key={key} className="p-3" hover={false}>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">{labels[key]}</p>
           <p className="mt-1 text-sm font-black text-white">{value}</p>
         </GlassCard>

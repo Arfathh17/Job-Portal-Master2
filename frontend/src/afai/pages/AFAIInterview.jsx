@@ -140,7 +140,7 @@ export default function AFAIInterview() {
       <MotionPage className="flex min-h-screen items-center justify-center px-5">
         <GlassCard className="p-6">
           <h1 className="text-xl font-black text-white">No active AFAI session</h1>
-          <button onClick={() => navigate('/afai')} className="mt-4 rounded-xl bg-stone-50 px-4 py-2 text-sm font-black text-slate-950">
+          <button onClick={() => navigate('/afai')} className="soft-action mt-4 rounded-xl border border-violet-200 bg-white/85 px-4 py-2 text-sm font-black text-slate-950">
             Start setup
           </button>
         </GlassCard>
@@ -149,16 +149,16 @@ export default function AFAIInterview() {
   }
 
   return (
-    <MotionPage className="pb-12">
+    <MotionPage className="pb-16">
       <header className="mx-auto max-w-7xl px-5 pt-8">
-        <GlassCard className="flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between">
+        <GlassCard className="cinematic-stage flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between" hover={false}>
           <div className="flex items-center gap-3">
             <button onClick={() => navigate('/afai')} className="icon-btn" aria-label="Back to setup">
               <ArrowLeft size={18} />
             </button>
             <div>
               <NeonBadge>AFAI live interview</NeonBadge>
-              <h1 className="mt-2 text-2xl font-black tracking-tight text-white">{setup.role}</h1>
+              <h1 className="afai-wordmark mt-2 text-3xl font-black text-white">{setup.role}</h1>
             </div>
           </div>
           <button onClick={endInterview} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-black text-slate-100 transition hover:border-white/20 hover:bg-white/[0.075]">
@@ -211,7 +211,7 @@ export default function AFAIInterview() {
                 rows={3}
                 className="field min-h-[76px] resize-none"
               />
-              <button disabled={isThinking || isTyping || !answer.trim()} className="inline-flex min-w-[46px] items-center justify-center rounded-xl bg-stone-50 px-4 text-slate-950 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Send answer">
+              <button disabled={isThinking || isTyping || !answer.trim()} className="contrast-action inline-flex min-w-[46px] items-center justify-center rounded-xl bg-slate-950 px-4 text-white transition hover:bg-violet-900 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Send answer">
                 <Send size={19} />
               </button>
             </div>

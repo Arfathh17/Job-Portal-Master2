@@ -8,6 +8,7 @@ const User = require('../models/user');
 const QuestionBank = require('../models/QuestionBank');
 const aiFactory = require('../services/ai/aiFactory');
 const resumeAIService = require('../services/resumeAIService');
+const { getIsConnected } = require('../config/db');
 const pdfParse = require('pdf-parse');
 const fs = require('fs');
 const path = require('path');
@@ -18,6 +19,10 @@ class ResumeController {
    */
   async uploadResume(req, res) {
     try {
+      if (!getIsConnected()) {
+        return res.status(503).json({ error: 'Resume upload history requires MongoDB. Text analysis is available in demo mode.' });
+      }
+
       if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
       }
@@ -253,6 +258,13 @@ Return JSON array with: [{ question: "...", category: "technical", relevance: "h
    */
   async getUserResumes(req, res) {
     try {
+      if (!getIsConnected()) {
+        return res.json({
+          success: true,
+          resumes: [],
+        });
+      }
+
       const userId = req.user.id;
 
       const resumes = await Resume.find({ userId, isActive: true })

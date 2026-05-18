@@ -37,9 +37,9 @@ function compactDescription(description = '') {
 }
 
 function sourceBadgeClass(source) {
-  if (source === 'remotive') return 'border-teal-200/20 bg-teal-300/10 text-teal-100';
+  if (source === 'remotive') return 'border-emerald-200/60 bg-emerald-50 text-emerald-700';
   if (source === 'jsearch') return 'border-amber-200/25 bg-amber-300/10 text-amber-100';
-  return 'border-sky-200/20 bg-sky-300/10 text-sky-100';
+  return 'border-violet-200/70 bg-violet-50 text-violet-700';
 }
 
 function sourceLabel(source) {
@@ -199,19 +199,19 @@ export default function Jobs() {
   };
 
   return (
-    <MotionPage className="mx-auto max-w-7xl px-5 pb-12 pt-8">
-      <GlassCard className="p-5 sm:p-7" hover={false}>
+    <MotionPage className="mx-auto max-w-7xl px-5 pb-16 pt-8">
+      <GlassCard className="cinematic-stage p-5 sm:p-8" hover={false}>
         <NeonBadge><Sparkles size={14} /> Remotive + JSearch + Manual</NeonBadge>
-        <div className="mt-4 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(360px,520px)] lg:items-end">
+        <div className="mt-7 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(360px,520px)] lg:items-end">
           <div>
-            <h1 className="text-4xl font-black tracking-tight text-white">Browse jobs</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
-              Search remote roles, India tech openings, Bangalore jobs, internships, and recruiter-posted roles in one place.
+            <h1 className="dashboard-title max-w-4xl font-black uppercase text-white">Browse jobs</h1>
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-300">
+              Search remote roles, India tech openings, Bangalore jobs, internships, and recruiter-posted roles in one polished feed.
             </p>
           </div>
           <form onSubmit={submitSearch} className="grid w-full gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-3.5 text-sky-100/70" size={18} />
+              <Search className="absolute left-3 top-3.5 text-violet-500/80" size={18} />
               <input
                 value={search}
                 onChange={event => setSearch(event.target.value)}
@@ -223,7 +223,7 @@ export default function Jobs() {
           </form>
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div className="mt-8 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex flex-wrap gap-2">
             {scopeFilters.map(filter => (
               <button
@@ -233,7 +233,7 @@ export default function Jobs() {
                 className={cn(
                   'inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition',
                   scopeFilter === filter.id
-                    ? 'border-sky-100/40 bg-sky-100 text-slate-950'
+                    ? 'border-violet-200 bg-violet-100 text-violet-950'
                     : 'border-white/10 bg-white/[0.045] text-slate-300 hover:bg-white/[0.075]',
                 )}
               >
@@ -256,7 +256,7 @@ export default function Jobs() {
                 className={cn(
                   'rounded-xl border px-3 py-2 text-sm font-bold transition',
                   typeFilter === filter.id
-                    ? 'border-indigo-100/40 bg-indigo-100 text-slate-950'
+                    ? 'border-fuchsia-200 bg-fuchsia-100 text-fuchsia-950'
                     : 'border-white/10 bg-white/[0.045] text-slate-300 hover:bg-white/[0.075]',
                 )}
               >
@@ -272,12 +272,12 @@ export default function Jobs() {
       {isLoading ? (
         <GlassCard className="mt-5 flex min-h-[260px] items-center justify-center p-8" hover={false}>
           <div className="flex flex-col items-center gap-3 text-slate-300">
-            <Loader2 className="animate-spin text-sky-100" size={34} />
+            <Loader2 className="animate-spin text-violet-700" size={34} />
             <p className="text-sm font-bold">Loading jobs...</p>
           </div>
         </GlassCard>
       ) : (
-        <section className="mt-5 grid gap-4">
+        <section data-reveal="section" className="mt-5 grid gap-4">
           {jobs.map((job, index) => {
             const jobId = String(job._id || job.id);
             const applied = appliedJobIds.has(jobId);
@@ -289,11 +289,11 @@ export default function Jobs() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.025 }}
               >
-                <GlassCard className="p-4 sm:p-5" hover={false}>
+                <GlassCard className="luxury-table-row p-4 sm:p-5" hover={false}>
                   <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_230px] lg:items-start">
                     <div>
                       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-                        <h2 className="text-xl font-black leading-tight text-white sm:text-2xl">{job.title}</h2>
+                        <h2 className="afai-wordmark text-2xl font-black leading-tight text-white sm:text-3xl">{job.title}</h2>
                         <span className={cn('rounded-full border px-3 py-1 text-xs font-black uppercase tracking-[0.16em]', sourceBadgeClass(job.source))}>
                           {sourceLabel(job.source)}
                         </span>
@@ -301,15 +301,15 @@ export default function Jobs() {
 
                       <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-300">
                         <span className="inline-flex items-center gap-2">
-                          <Building2 size={16} className="text-sky-100/75" />
+                          <Building2 size={16} className="text-violet-500/80" />
                           {job.company}
                         </span>
                         <span className="inline-flex items-center gap-2">
-                          <MapPin size={16} className="text-sky-100/75" />
+                          <MapPin size={16} className="text-violet-500/80" />
                           {job.location || 'Remote'}
                         </span>
                         <span className="inline-flex items-center gap-2">
-                          <Briefcase size={16} className="text-sky-100/75" />
+                          <Briefcase size={16} className="text-violet-500/80" />
                           {job.type || 'full-time'}
                         </span>
                       </div>
@@ -332,7 +332,7 @@ export default function Jobs() {
                         type="button"
                         disabled={!job.applyLink && (user?.role !== 'candidate' || !hasBackendToken() || applied || isApplying === jobId)}
                         onClick={() => apply(job)}
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-stone-50 px-4 py-2.5 text-sm font-black text-slate-950 transition hover:bg-sky-100 disabled:bg-white/[0.08] disabled:text-slate-400"
+                        className="contrast-action inline-flex w-full items-center justify-center gap-2 rounded-xl border border-violet-200 bg-slate-950 px-4 py-2.5 text-sm font-black text-white transition hover:bg-violet-900 disabled:bg-white/70 disabled:text-slate-400"
                       >
                         {applied ? <CheckCircle2 size={17} /> : <ExternalLink size={17} />}
                         {applied ? 'Applied' : 'Apply'}
@@ -340,7 +340,7 @@ export default function Jobs() {
                       <button
                         type="button"
                         onClick={() => navigate('/afai', { state: { role: job.title, technologies: job.skills || [] } })}
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.055] px-4 py-2.5 text-sm font-black text-stone-100 transition hover:border-sky-100/30 hover:bg-white/[0.09]"
+                        className="soft-action inline-flex w-full items-center justify-center gap-2 rounded-xl border border-violet-200/70 bg-white/80 px-4 py-2.5 text-sm font-black text-slate-800 transition hover:border-violet-300 hover:bg-violet-50"
                       >
                         <Bot size={17} />
                         Practice Interview

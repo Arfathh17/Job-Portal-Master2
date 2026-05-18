@@ -87,25 +87,26 @@ export default function AFAISetup() {
   };
 
   return (
-    <MotionPage className="pb-12">
+    <MotionPage className="pb-16">
       <section className="mx-auto max-w-7xl px-5 pt-8">
-        <GlassCard className="flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between">
+        <GlassCard className="cinematic-stage flex min-h-[360px] flex-col justify-between gap-8 p-6 md:flex-row md:items-end md:justify-between md:p-8" hover={false}>
           <div>
             <NeonBadge>AI Job Portal</NeonBadge>
-            <h1 className="mt-3 text-4xl font-black tracking-tight text-white">AFAI Intelligent Interview Simulator</h1>
+            <h1 className="dashboard-title mt-6 max-w-5xl font-black uppercase text-white">AFAI intelligent interview simulator</h1>
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-300">Set the role, difficulty, and technology depth. AFAI will shape a focused live interview around your answers.</p>
           </div>
-          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.055] px-3 py-2 text-sm font-semibold text-slate-300">
+          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.055] px-4 py-2 text-sm font-semibold text-slate-300">
             <MessagesSquare size={18} />
-            Adaptive one-question-at-a-time interviews
+            Adaptive one-question flow
           </div>
         </GlassCard>
       </section>
 
       <section className="mx-auto grid max-w-7xl gap-6 px-5 py-6 lg:grid-cols-[1.15fr_0.85fr]">
-        <GlassCard>
+        <GlassCard hover={false}>
         <form onSubmit={startInterview} className="p-5">
           <div className="mb-5 flex items-center gap-3">
-            <SlidersHorizontal className="text-sky-100" size={22} />
+            <SlidersHorizontal className="text-violet-700" size={22} />
             <div>
               <h2 className="text-xl font-black text-white">Interview setup</h2>
               <p className="text-sm text-slate-400">AFAI uses this context to choose role-based questions and follow-ups.</p>
@@ -157,7 +158,7 @@ export default function AFAISetup() {
         <aside className="grid gap-4">
           <GlassCard className="p-5">
             <div className="flex items-center gap-3">
-              <Briefcase className="text-sky-100" size={22} />
+              <Briefcase className="text-violet-700" size={22} />
               <h2 className="text-lg font-black text-white">Interview behavior</h2>
             </div>
             <ul className="mt-4 space-y-3 text-sm text-slate-400">
@@ -169,7 +170,7 @@ export default function AFAISetup() {
 
           <GlassCard className="p-5">
             <div className="flex items-center gap-3">
-              <Cpu className="text-sky-100" size={22} />
+              <Cpu className="text-violet-700" size={22} />
               <h2 className="text-lg font-black text-white">Technology depth</h2>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { BadgeCheck, Eye, LockKeyhole, Mail, UserRound } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
 import { useAuth } from '../context/AuthContext';
-import { GlassCard, GlowButton, MotionPage, NeonBadge } from '../components/PremiumUI';
+import { GlassCard, GlowButton, MaskedHeadline, MotionPage, NeonBadge } from '../components/PremiumUI';
 
 export default function Register() {
   const { register, loginWithGoogle } = useAuth();
@@ -45,32 +45,32 @@ export default function Register() {
   };
 
   return (
-    <MotionPage className="grid min-h-screen place-items-center px-5 py-8">
-      <div className="grid w-full max-w-6xl gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <GlassCard className="mx-auto w-full max-w-md p-6 sm:p-8" hover={false}>
+    <MotionPage className="grid min-h-screen place-items-center px-4 py-6 sm:px-6">
+      <div className="grid w-full max-w-7xl gap-5 lg:grid-cols-[470px_minmax(0,1.24fr)]">
+        <GlassCard className="mx-auto flex w-full max-w-md flex-col justify-center p-6 sm:p-8 lg:max-w-none" hover={false}>
           <NeonBadge><BadgeCheck size={14} /> Start premium access</NeonBadge>
-          <h1 className="mt-4 text-3xl font-black tracking-tight text-white">Create your account</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-400">Choose the workflow that matches your side of the hiring platform.</p>
+          <h1 className="afai-wordmark mt-5 text-4xl font-black leading-none text-white sm:text-5xl">Claim your workflow.</h1>
+          <p className="mt-4 text-sm leading-6 text-slate-400">Choose the workspace that matches your side of the platform.</p>
 
           <form onSubmit={submit} className="mt-7 space-y-4">
             <label className="block space-y-2">
               <span className="text-sm font-semibold text-slate-300">Name</span>
               <div className="relative">
-                <UserRound className="absolute left-3 top-3.5 text-sky-100/70" size={18} />
+                <UserRound className="absolute left-3 top-3.5 text-violet-500/80" size={18} />
                 <input name="name" value={form.name} onChange={update} className="field pl-10" required />
               </div>
             </label>
             <label className="block space-y-2">
               <span className="text-sm font-semibold text-slate-300">Email</span>
               <div className="relative">
-                <Mail className="absolute left-3 top-3.5 text-sky-100/70" size={18} />
+                <Mail className="absolute left-3 top-3.5 text-violet-500/80" size={18} />
                 <input name="email" type="email" value={form.email} onChange={update} className="field pl-10" required />
               </div>
             </label>
             <label className="block space-y-2">
               <span className="text-sm font-semibold text-slate-300">Password</span>
               <div className="relative">
-                <LockKeyhole className="absolute left-3 top-3.5 text-sky-100/70" size={18} />
+                <LockKeyhole className="absolute left-3 top-3.5 text-violet-500/80" size={18} />
                 <input name="password" type={showPassword ? 'text' : 'password'} minLength={6} value={form.password} onChange={update} className="field px-10" required />
                 <button type="button" onClick={() => setShowPassword(prev => !prev)} className="absolute right-3 top-3.5 text-slate-400 transition hover:text-white" aria-label="Toggle password visibility">
                   <Eye size={18} />
@@ -90,7 +90,7 @@ export default function Register() {
             </GlowButton>
           </form>
           <p className="mt-5 text-center text-sm text-slate-400">
-            Already registered? <Link className="font-bold text-sky-100 hover:text-white" to="/login">Login</Link>
+            Already registered? <Link className="font-bold text-violet-700 hover:text-violet-950" to="/login">Login</Link>
           </p>
 
           <div className="mt-6 flex items-center gap-3">
@@ -110,15 +110,20 @@ export default function Register() {
           </button>
         </GlassCard>
 
-        <section className="hidden min-h-[640px] rounded-3xl border border-white/10 bg-slate-950/55 p-8 shadow-2xl backdrop-blur-2xl lg:block">
+        <section className="cinematic-stage image-reveal hidden min-h-[720px] rounded-[2rem] p-7 lg:block xl:p-10">
+          <div className="relative z-10">
           <NeonBadge>Designed for real workflows</NeonBadge>
-          <h2 className="mt-8 text-6xl font-black leading-[0.95] tracking-tight">
-            Build your <span className="neon-text">career command center.</span>
+          <h2 className="hero-type mt-10 max-w-5xl font-black uppercase text-white">
+            <MaskedHeadline>Career command center</MaskedHeadline>
           </h2>
-          <div className="product-sculpture mt-8">
+          <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-300">
+            One premium operating layer for candidate preparation, recruiter briefs, and AI-guided interview readiness.
+          </p>
+          </div>
+          <div className="product-sculpture relative z-10 mt-10" data-parallax="10">
             <div className="sculpture-pane p-4">
               <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Role fit</p>
-              <div className="mt-4 h-2 w-4/5 rounded-full bg-white/18" />
+              <div className="mt-4 h-2 w-4/5 rounded-full bg-white/[0.18]" />
               <div className="mt-3 h-2 w-1/2 rounded-full bg-white/10" />
             </div>
             <div className="sculpture-pane p-4">
@@ -133,9 +138,9 @@ export default function Register() {
               <p className="text-xs font-bold text-slate-300">Interview loop active</p>
             </div>
           </div>
-          <div className="mt-6 grid gap-4">
+          <div className="relative z-10 mt-8 grid gap-4 sm:grid-cols-2">
             {['Candidate dashboard', 'Recruiter workspace', 'Resume analyzer', 'AFAI interview simulator'].map((item, index) => (
-              <div key={item} className="premium-card flex items-center justify-between p-4">
+              <div key={item} className="luxury-table-row premium-card flex items-center justify-between p-4">
                 <span className="font-semibold">{item}</span>
                 <span className="text-sm font-black text-slate-400">0{index + 1}</span>
               </div>

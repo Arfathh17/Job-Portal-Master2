@@ -1,5 +1,4 @@
 const express = require('express');
-const db = require("../config/firebaseAdmin");
 
 const { getIsConnected } = require('../config/db');
 const { auth, authorizeRoles } = require('../middleware/auth');
@@ -7,6 +6,7 @@ const { fetchIndiaJobs } = require('../services/jsearchJobService');
 const { fetchRemoteJobs } = require('../services/remotiveJobService');
 const {
   addApplication: addManualApplication,
+  createManualJob,
   getApplicationsByRecruiter,
   getApplicationsByUser,
   getManualJobById,
@@ -420,31 +420,17 @@ async function createPlatformJob(req, res) {
     const validationError = validateManualJob(req.body);
     if (validationError) return res.status(400).json({ error: validationError });
 
-    const jobRef = db.collection('jobs').doc();
-    const createdAt = new Date();
-    const jobPayload = normalizeCreatePayload(req.body, req.user);
-    const job = normalizeManualJob({
-      ...jobPayload,
-      _id: jobRef.id,
-      id: jobRef.id,
-      applications: [],
-      createdAt,
-    });
-
-    await jobRef.set({
-      ...job,
-      createdAt,
-    });
+    const job = await createManualJob(normalizeCreatePayload(req.body, req.user));
 
     return res.status(201).json({
       success: true,
-      id: jobRef.id,
+      id: job.id,
       job,
       message: 'Job created successfully.',
     });
   } catch (error) {
-    console.error('Firestore job creation error:', error);
-    return res.status(500).json({ error: 'Failed to create job in Firestore.' });
+    console.error('Job creation error:', error);
+    return res.status(500).json({ error: 'Failed to create job.' });
   }
 }
 

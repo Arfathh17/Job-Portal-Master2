@@ -69,6 +69,26 @@ router.get(
 );
 
 /**
+ * GET /api/resume/history
+ * Backward-compatible alias for user's resume history
+ */
+router.get(
+  '/history',
+  authMiddleware,
+  (req, res) => resumeController.getUserResumes(req, res)
+);
+
+/**
+ * GET /api/resume/:resumeId/questions
+ * Get interview questions generated from resume
+ */
+router.get(
+  '/:resumeId/questions',
+  authMiddleware,
+  (req, res) => resumeController.getResumeBasedQuestions(req, res)
+);
+
+/**
  * GET /api/resume/:resumeId
  * Get resume details
  */
@@ -86,16 +106,6 @@ router.delete(
   '/:resumeId',
   authMiddleware,
   (req, res) => resumeController.deleteResume(req, res)
-);
-
-/**
- * GET /api/resume/:resumeId/questions
- * Get interview questions generated from resume
- */
-router.get(
-  '/:resumeId/questions',
-  authMiddleware,
-  (req, res) => resumeController.getResumeBasedQuestions(req, res)
 );
 
 /**

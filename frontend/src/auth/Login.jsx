@@ -4,7 +4,7 @@ import { Eye, LockKeyhole, Mail, Rocket, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { FcGoogle } from 'react-icons/fc';
 import { useAuth } from '../context/AuthContext';
-import { GlassCard, GlowButton, MotionPage, NeonBadge } from '../components/PremiumUI';
+import { GlassCard, GlowButton, MaskedHeadline, MotionPage, NeonBadge } from '../components/PremiumUI';
 
 export default function Login() {
   const { login, loginWithGoogle } = useAuth();
@@ -49,71 +49,77 @@ export default function Login() {
   };
 
   return (
-    <MotionPage className="grid min-h-screen place-items-center px-5 py-8">
-      <div className="grid w-full max-w-6xl gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-        <section className="hidden min-h-[640px] flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-slate-950/55 p-8 shadow-2xl backdrop-blur-2xl lg:flex">
-          <div>
-            <NeonBadge><Sparkles size={14} /> Hiring workspace</NeonBadge>
-            <h1 className="mt-8 max-w-xl text-6xl font-black leading-[0.95] tracking-tight">
-              Make hiring feel <span className="neon-text">clear, calm, and human.</span>
+    <MotionPage className="grid min-h-screen place-items-center px-4 py-6 sm:px-6">
+      <div className="grid w-full max-w-7xl gap-5 lg:grid-cols-[minmax(0,1.24fr)_470px]">
+        <section className="cinematic-stage image-reveal hidden min-h-[720px] flex-col justify-between rounded-[2rem] p-7 lg:flex xl:p-10">
+          <div className="relative z-10">
+            <NeonBadge><Sparkles size={14} /> AFAI talent intelligence</NeonBadge>
+            <h1 className="hero-type mt-10 max-w-5xl font-black uppercase text-white">
+              <MaskedHeadline>Future ready hiring</MaskedHeadline>
             </h1>
-            <p className="mt-5 max-w-lg text-base leading-7 text-slate-400">
-              A focused place for candidates, recruiters, resume intelligence, and AFAI interviews to feel connected.
+            <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-300">
+              A cinematic workspace for sharper resumes, adaptive interviews, high-signal jobs, and recruiter workflows that feel intentional.
             </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              {['Resume signal', 'Adaptive AFAI', 'Recruiter flow'].map(item => (
+                <span key={item} className="brand-chip rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-slate-200">{item}</span>
+              ))}
+            </div>
           </div>
-          <div>
-            <div className="product-sculpture">
+
+          <div className="relative z-10 grid gap-5 xl:grid-cols-[0.9fr_1.1fr] xl:items-end">
+            <div className="product-sculpture" data-parallax="8">
               <div className="sculpture-pane p-4">
                 <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Candidate signal</p>
-                <div className="mt-4 h-2 w-3/4 rounded-full bg-white/18" />
+                <div className="mt-4 h-2 w-3/4 rounded-full bg-white/[0.18]" />
                 <div className="mt-3 h-2 w-1/2 rounded-full bg-white/10" />
               </div>
               <div className="sculpture-pane p-4">
                 <p className="text-sm font-bold text-stone-100">AFAI is listening</p>
                 <div className="mt-4 flex h-10 items-end gap-1.5">
-                  {Array.from({ length: 9 }).map((_, index) => <span key={index} className="w-1.5 rounded-full bg-sky-100/60" style={{ height: `${12 + (index % 4) * 7}px` }} />)}
+                  {Array.from({ length: 9 }).map((_, index) => <span key={index} className="w-1.5 rounded-full bg-violet-300/70" style={{ height: `${12 + (index % 4) * 7}px` }} />)}
                 </div>
               </div>
               <div className="sculpture-pane p-4">
                 <p className="text-xs font-bold text-slate-300">Resume score ready</p>
               </div>
             </div>
-            <div className="mt-4 grid gap-3">
+            <div className="grid gap-3">
             {['Resume intelligence', 'Adaptive interviews', 'Application tracking'].map((item, index) => (
               <motion.div
                 key={item}
                 initial={{ opacity: 0, x: -16 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 + index * 0.1 }}
-                className="premium-card flex items-center justify-between p-4"
+                className="luxury-table-row premium-card flex items-center justify-between p-4"
               >
                 <span className="font-semibold text-white">{item}</span>
-                <span className="h-2 w-24 rounded-full bg-gradient-to-r from-sky-100 to-indigo-200 shadow-[0_12px_28px_rgba(125,145,255,0.16)]" />
+                <span className="h-2 w-24 rounded-full bg-gradient-to-r from-violet-200 via-fuchsia-100 to-slate-200 shadow-[0_12px_28px_rgba(109,40,217,0.12)]" />
               </motion.div>
             ))}
             </div>
           </div>
         </section>
 
-        <GlassCard className="mx-auto w-full max-w-md p-6 sm:p-8" hover={false}>
+        <GlassCard className="mx-auto flex w-full max-w-md flex-col justify-center p-6 sm:p-8 lg:max-w-none" hover={false}>
           <div className="mb-7">
             <NeonBadge><Rocket size={14} /> Welcome back</NeonBadge>
-            <h2 className="mt-4 text-3xl font-black tracking-tight text-white">Login to your portal</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-400">Continue your hiring pipeline, candidate journey, or AFAI session.</p>
+            <h2 className="afai-wordmark mt-5 text-4xl font-black leading-none text-white sm:text-5xl">Enter the talent atelier.</h2>
+            <p className="mt-4 text-sm leading-6 text-slate-400">Continue your hiring pipeline, candidate journey, or AFAI interview session.</p>
           </div>
 
           <form onSubmit={submit} className="space-y-4">
             <label className="block space-y-2">
               <span className="text-sm font-semibold text-slate-300">Email</span>
               <div className="relative">
-                <Mail className="absolute left-3 top-3.5 text-sky-100/70" size={18} />
+                <Mail className="absolute left-3 top-3.5 text-violet-500/80" size={18} />
                 <input name="email" type="email" value={form.email} onChange={update} className="field pl-10" required />
               </div>
             </label>
             <label className="block space-y-2">
               <span className="text-sm font-semibold text-slate-300">Password</span>
               <div className="relative">
-                <LockKeyhole className="absolute left-3 top-3.5 text-sky-100/70" size={18} />
+                <LockKeyhole className="absolute left-3 top-3.5 text-violet-500/80" size={18} />
                 <input name="password" type={showPassword ? 'text' : 'password'} value={form.password} onChange={update} className="field px-10" required />
                 <button type="button" onClick={() => setShowPassword(prev => !prev)} className="absolute right-3 top-3.5 text-slate-400 transition hover:text-white" aria-label="Toggle password visibility">
                   <Eye size={18} />
@@ -127,7 +133,7 @@ export default function Login() {
           </form>
 
           <p className="mt-5 text-center text-sm text-slate-400">
-            New here? <Link className="font-bold text-sky-100 hover:text-white" to="/register">Create account</Link>
+            New here? <Link className="font-bold text-violet-700 hover:text-violet-950" to="/register">Create account</Link>
           </p>
 
           <div className="mt-6 flex items-center gap-3">

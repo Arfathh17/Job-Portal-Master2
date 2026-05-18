@@ -1,13 +1,18 @@
 const admin = require("firebase-admin");
 
-const serviceAccount = require("./serviceAccountKey.json");
+let serviceAccount = null;
+try {
+  serviceAccount = require("./serviceAccountKey.json");
+} catch (error) {
+  console.warn("Firebase Admin: service account not found; Firestore-backed jobs will use demo fallback.");
+}
 
-if (!admin.apps.length) {
+if (serviceAccount && !admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
   });
 }
 
-const db = admin.firestore();
+const db = serviceAccount ? admin.firestore() : null;
 
 module.exports = db;

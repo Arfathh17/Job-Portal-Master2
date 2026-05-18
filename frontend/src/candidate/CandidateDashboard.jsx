@@ -18,30 +18,30 @@ export default function CandidateDashboard() {
   const FeaturedIcon = featured.icon;
 
   return (
-    <MotionPage className="mx-auto max-w-7xl px-5 pb-12 pt-8">
-      <section className="grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_360px]">
-        <GlassCard className="min-h-[360px] p-6 sm:p-8">
+    <MotionPage className="mx-auto max-w-7xl px-5 pb-16 pt-8">
+      <section className="grid gap-5 lg:grid-cols-[minmax(0,1.45fr)_360px]">
+        <GlassCard className="cinematic-stage min-h-[500px] p-6 sm:p-8" hover={false}>
           <NeonBadge><Sparkles size={14} /> Candidate workspace</NeonBadge>
-          <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_270px] lg:items-end">
+          <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_285px] lg:items-end">
             <div>
-              <h1 className="max-w-3xl text-4xl font-black leading-tight tracking-tight sm:text-6xl">
-                Welcome back, <span className="neon-text">{user?.name}</span>
+              <h1 className="dashboard-title max-w-4xl font-black uppercase text-white">
+                Welcome back, <span className="lavender-text">{user?.name}</span>
               </h1>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400">
-                A quieter command center for choosing better roles, sharpening your resume, and practicing before the real conversation.
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
+                Choose better roles, sharpen your resume signal, and rehearse before the real conversation.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
                 <GlowButton as={Link} to="/jobs">Find a role</GlowButton>
-                <Link to="/resume-analyzer" className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.045] px-5 py-3 text-sm font-bold text-stone-100 transition hover:border-white/20 hover:bg-white/[0.075]">
+                <Link to="/resume-analyzer" className="magnetic-btn inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.045] px-5 py-3 text-sm font-bold text-stone-100 transition hover:border-white/20 hover:bg-white/[0.075]">
                   Improve resume <MoveUpRight size={17} />
                 </Link>
               </div>
             </div>
 
             <Link to={featured.href} className="group block">
-              <div className="premium-card relative overflow-hidden p-5">
-                <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-sky-200/10 blur-2xl transition group-hover:scale-125" />
-                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.06] text-sky-100">
+              <div className="premium-card image-reveal relative overflow-hidden p-5">
+                <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-violet-200/40 blur-2xl transition group-hover:scale-125" />
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/80 text-violet-700">
                   <FeaturedIcon size={23} />
                 </span>
                 <p className="mt-5 text-xs font-black uppercase tracking-[0.2em] text-slate-500">Next best move</p>
@@ -56,7 +56,7 @@ export default function CandidateDashboard() {
           <StatCard label="Profile signal" value="Ready" icon={Zap} />
           <StatCard label="Preparation mode" value="Focused" icon={TrendingUp} tone="purple" />
           <GlassCard className="p-5">
-            <p className="text-sm font-black text-stone-50">Today’s rhythm</p>
+            <p className="text-sm font-black text-stone-50">Today's rhythm</p>
             <div className="mt-4 space-y-4">
               {timeline.map((item, index) => (
                 <div key={item} className="flex gap-3">
@@ -69,14 +69,24 @@ export default function CandidateDashboard() {
         </div>
       </section>
 
-      <section className="mt-6 grid gap-4 lg:grid-cols-3">
+      <section data-reveal="section" className="mt-6 overflow-hidden rounded-[1.25rem] border border-white/10 bg-white/[0.035] py-4">
+        <div className="kinetic-marquee gap-3">
+          {[...actions, ...actions].map((action, index) => (
+            <span key={`${action.title}-${index}`} className="mx-2 rounded-full border border-white/10 px-5 py-2 text-xs font-black uppercase tracking-[0.2em] text-slate-400">
+              {action.title}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      <section data-reveal="section" className="mt-6 grid gap-4 lg:grid-cols-3">
         {actions.filter(action => action.title !== featured.title).map(action => {
           const Icon = action.icon;
           return (
             <Link key={action.title} to={action.href} className="group">
               <GlassCard className="h-full p-5">
                 <div className="flex items-center justify-between gap-4">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.055] text-sky-100">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-violet-200/60 bg-white/80 text-violet-700">
                     <Icon size={22} />
                   </span>
                   <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{action.label}</span>

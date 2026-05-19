@@ -48,6 +48,14 @@ function sourceLabel(source) {
   return 'Manual';
 }
 
+function formatJobType(type) {
+  if (!type) return 'Full Time';
+  return String(type)
+    .split('-')
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
 function normalizeLocationValue(value = '') {
   return String(value || '')
     .toLowerCase()
@@ -199,13 +207,13 @@ export default function Jobs() {
   };
 
   return (
-    <MotionPage className="mx-auto max-w-7xl px-5 pb-16 pt-8">
+    <MotionPage className="mx-auto w-full max-w-7xl px-4 pb-16 pt-8 sm:px-6 md:px-10">
       <GlassCard className="cinematic-stage p-5 sm:p-8" hover={false}>
         <NeonBadge><Sparkles size={14} /> Remotive + JSearch + Manual</NeonBadge>
-        <div className="mt-7 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(360px,520px)] lg:items-end">
+        <div className="mt-7 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,520px)] lg:items-end">
           <div>
-            <h1 className="dashboard-title max-w-4xl font-black uppercase text-white">Browse jobs</h1>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-300">
+            <h1 className="dashboard-title max-w-4xl overflow-hidden break-words text-3xl font-black uppercase leading-tight text-white sm:text-4xl md:text-6xl lg:text-7xl lg:leading-none">Browse Jobs</h1>
+            <p className="mt-5 max-w-2xl text-base sm:text-lg leading-7 sm:leading-8 text-slate-300">
               Search remote roles, India tech openings, Bangalore jobs, internships, and recruiter-posted roles in one polished feed.
             </p>
           </div>
@@ -216,14 +224,14 @@ export default function Jobs() {
                 value={search}
                 onChange={event => setSearch(event.target.value)}
                 className="field pl-10"
-                placeholder="Search title, company, or skill"
+                placeholder="Search Title, Company, Or Skill"
               />
             </div>
-            <GlowButton disabled={isLoading}>Search</GlowButton>
+            <GlowButton disabled={isLoading} className="w-full sm:w-auto">Search</GlowButton>
           </form>
         </div>
 
-        <div className="mt-8 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div className="mt-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap gap-2">
             {scopeFilters.map(filter => (
               <button
@@ -231,7 +239,7 @@ export default function Jobs() {
                 type="button"
                 onClick={() => setScopeFilter(filter.id)}
                 className={cn(
-                  'inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition',
+                  'inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition sm:px-4 sm:text-sm',
                   scopeFilter === filter.id
                     ? 'border-violet-200 bg-violet-100 text-violet-950'
                     : 'border-white/10 bg-white/[0.045] text-slate-300 hover:bg-white/[0.075]',
@@ -254,7 +262,7 @@ export default function Jobs() {
                 type="button"
                 onClick={() => setTypeFilter(prev => (prev === filter.id ? '' : filter.id))}
                 className={cn(
-                  'rounded-xl border px-3 py-2 text-sm font-bold transition',
+                  'rounded-xl border px-3 py-2 text-xs font-bold transition sm:text-sm',
                   typeFilter === filter.id
                     ? 'border-fuchsia-200 bg-fuchsia-100 text-fuchsia-950'
                     : 'border-white/10 bg-white/[0.045] text-slate-300 hover:bg-white/[0.075]',
@@ -267,13 +275,13 @@ export default function Jobs() {
         </div>
       </GlassCard>
 
-      {error && <p className="mt-4 rounded-xl border border-rose-300/25 bg-rose-400/10 px-3 py-2 text-sm text-rose-100">{error}</p>}
+      {error && <p className="mt-4 rounded-xl border border-rose-300/25 bg-rose-400/10 px-3 py-2 text-sm text-rose-100 break-words">{error}</p>}
 
       {isLoading ? (
         <GlassCard className="mt-5 flex min-h-[260px] items-center justify-center p-8" hover={false}>
           <div className="flex flex-col items-center gap-3 text-slate-300">
             <Loader2 className="animate-spin text-violet-700" size={34} />
-            <p className="text-sm font-bold">Loading jobs...</p>
+            <p className="text-sm font-bold">Loading Jobs...</p>
           </div>
         </GlassCard>
       ) : (
@@ -290,31 +298,31 @@ export default function Jobs() {
                 transition={{ delay: index * 0.025 }}
               >
                 <GlassCard className="luxury-table-row p-4 sm:p-5" hover={false}>
-                  <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_230px] lg:items-start">
+                  <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
                     <div>
                       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-                        <h2 className="afai-wordmark text-2xl font-black leading-tight text-white sm:text-3xl">{job.title}</h2>
-                        <span className={cn('rounded-full border px-3 py-1 text-xs font-black uppercase tracking-[0.16em]', sourceBadgeClass(job.source))}>
+                        <h2 className="afai-wordmark text-xl sm:text-2xl lg:text-3xl font-black leading-tight text-white break-words">{job.title}</h2>
+                        <span className={cn('rounded-full border px-3 py-1 text-xs font-black uppercase tracking-[0.16em] whitespace-nowrap', sourceBadgeClass(job.source))}>
                           {sourceLabel(job.source)}
                         </span>
                       </div>
 
-                      <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-300">
+                      <div className="mt-3 flex flex-wrap gap-x-3 sm:gap-x-5 gap-y-2 text-xs sm:text-sm text-slate-300">
                         <span className="inline-flex items-center gap-2">
-                          <Building2 size={16} className="text-violet-500/80" />
-                          {job.company}
+                          <Building2 size={16} className="text-violet-500/80 flex-shrink-0" />
+                          <span className="break-words">{job.company}</span>
                         </span>
                         <span className="inline-flex items-center gap-2">
-                          <MapPin size={16} className="text-violet-500/80" />
-                          {job.location || 'Remote'}
+                          <MapPin size={16} className="text-violet-500/80 flex-shrink-0" />
+                          <span className="break-words">{job.location || 'Remote'}</span>
                         </span>
                         <span className="inline-flex items-center gap-2">
-                          <Briefcase size={16} className="text-violet-500/80" />
-                          {job.type || 'full-time'}
+                          <Briefcase size={16} className="text-violet-500/80 flex-shrink-0" />
+                          {formatJobType(job.type)}
                         </span>
                       </div>
 
-                      <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-400">{compactDescription(job.description)}</p>
+                      <p className="mt-3 max-w-4xl text-xs sm:text-sm leading-6 text-slate-400 break-words">{compactDescription(job.description)}</p>
 
                       <div className="mt-4 flex flex-wrap gap-2">
                         {(job.skills || []).slice(0, 8).map(skill => (
@@ -323,16 +331,16 @@ export default function Jobs() {
                       </div>
                     </div>
 
-                    <div className="flex h-full flex-col gap-3 lg:items-end">
+                    <div className="flex h-full flex-col gap-3 lg:items-end w-full lg:w-auto">
                       <div className="w-full rounded-xl border border-white/10 bg-white/[0.045] px-4 py-3 lg:text-right">
                         <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">Salary</p>
-                        <p className="mt-1 text-sm font-bold text-stone-100">{formatSalary(job.salary)}</p>
+                        <p className="mt-1 text-xs sm:text-sm font-bold text-stone-100 break-words">{formatSalary(job.salary)}</p>
                       </div>
                       <button
                         type="button"
                         disabled={!job.applyLink && (user?.role !== 'candidate' || !hasBackendToken() || applied || isApplying === jobId)}
                         onClick={() => apply(job)}
-                        className="contrast-action inline-flex w-full items-center justify-center gap-2 rounded-xl border border-violet-200 bg-slate-950 px-4 py-2.5 text-sm font-black text-white transition hover:bg-violet-900 disabled:bg-white/70 disabled:text-slate-400"
+                        className="contrast-action inline-flex w-full items-center justify-center gap-2 rounded-xl border border-violet-200 bg-slate-950 px-4 py-2.5 text-xs sm:text-sm font-black text-white transition hover:bg-violet-900 disabled:bg-white/70 disabled:text-slate-400"
                       >
                         {applied ? <CheckCircle2 size={17} /> : <ExternalLink size={17} />}
                         {applied ? 'Applied' : 'Apply'}
@@ -340,10 +348,11 @@ export default function Jobs() {
                       <button
                         type="button"
                         onClick={() => navigate('/afai', { state: { role: job.title, technologies: job.skills || [] } })}
-                        className="soft-action inline-flex w-full items-center justify-center gap-2 rounded-xl border border-violet-200/70 bg-white/80 px-4 py-2.5 text-sm font-black text-slate-800 transition hover:border-violet-300 hover:bg-violet-50"
+                        className="soft-action inline-flex w-full items-center justify-center gap-2 rounded-xl border border-violet-200/70 bg-white/80 px-4 py-2.5 text-xs sm:text-sm font-black text-slate-800 transition hover:border-violet-300 hover:bg-violet-50"
                       >
                         <Bot size={17} />
-                        Practice Interview
+                        <span className="hidden xs:inline">Practice Interview</span>
+                        <span className="xs:hidden">Practice</span>
                       </button>
                     </div>
                   </div>
@@ -356,8 +365,8 @@ export default function Jobs() {
             <GlassCard className="flex min-h-[260px] items-center justify-center p-8 text-center" hover={false}>
               <div>
                 <Briefcase className="mx-auto text-slate-500" size={38} />
-                <h2 className="mt-4 text-xl font-black text-stone-100">No jobs found</h2>
-                <p className="mt-2 max-w-md text-sm leading-6 text-slate-400">Try a different keyword or clear one of the active filters.</p>
+                <h2 className="mt-4 text-lg sm:text-xl font-black text-stone-100">No Jobs Found</h2>
+                <p className="mt-2 max-w-md text-xs sm:text-sm leading-6 text-slate-400">Try a different keyword or clear one of the active filters.</p>
               </div>
             </GlassCard>
           )}

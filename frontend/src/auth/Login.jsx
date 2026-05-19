@@ -49,12 +49,12 @@ export default function Login() {
   };
 
   return (
-    <MotionPage className="grid min-h-screen place-items-center px-4 py-6 sm:px-6">
-      <div className="grid w-full max-w-7xl gap-5 lg:grid-cols-[minmax(0,1.24fr)_470px]">
-        <section className="cinematic-stage image-reveal hidden min-h-[720px] flex-col justify-between rounded-[2rem] p-7 lg:flex xl:p-10">
+    <MotionPage className="grid min-h-screen place-items-center px-4 py-6 sm:px-6 md:px-10">
+      <div className="grid w-full max-w-7xl gap-5 lg:grid-cols-[minmax(0,1.24fr)_minmax(360px,470px)]">
+        <section className="cinematic-stage image-reveal hidden min-h-[720px] max-w-full flex-col justify-between rounded-[2rem] p-7 lg:flex xl:p-10">
           <div className="relative z-10">
             <NeonBadge><Sparkles size={14} /> AFAI talent intelligence</NeonBadge>
-            <h1 className="hero-type mt-10 max-w-5xl font-black uppercase text-white">
+            <h1 className="hero-type mt-10 max-w-5xl overflow-hidden break-words text-3xl font-black uppercase leading-tight text-white sm:text-4xl md:text-6xl lg:text-7xl lg:leading-none">
               <MaskedHeadline>Future ready hiring</MaskedHeadline>
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-300">
@@ -85,7 +85,7 @@ export default function Login() {
               </div>
             </div>
             <div className="grid gap-3">
-            {['Resume intelligence', 'Adaptive interviews', 'Application tracking'].map((item, index) => (
+            {['Resume Intelligence', 'Adaptive Interviews', 'Application Tracking'].map((item, index) => (
               <motion.div
                 key={item}
                 initial={{ opacity: 0, x: -16 }}
@@ -101,10 +101,10 @@ export default function Login() {
           </div>
         </section>
 
-        <GlassCard className="mx-auto flex w-full max-w-md flex-col justify-center p-6 sm:p-8 lg:max-w-none" hover={false}>
+        <GlassCard className="mx-auto flex w-full max-w-md max-w-full flex-col justify-center p-6 sm:p-8 lg:max-w-none" hover={false}>
           <div className="mb-7">
             <NeonBadge><Rocket size={14} /> Welcome back</NeonBadge>
-            <h2 className="afai-wordmark mt-5 text-4xl font-black leading-none text-white sm:text-5xl">Enter the talent atelier.</h2>
+            <h2 className="afai-wordmark mt-5 overflow-hidden break-words text-3xl font-black leading-tight text-white sm:text-4xl sm:leading-none">Enter the talent atelier.</h2>
             <p className="mt-4 text-sm leading-6 text-slate-400">Continue your hiring pipeline, candidate journey, or AFAI interview session.</p>
           </div>
 
@@ -126,14 +126,14 @@ export default function Login() {
                 </button>
               </div>
             </label>
-            {error && <p className="rounded-xl border border-rose-300/25 bg-rose-400/10 px-3 py-2 text-sm text-rose-100">{error}</p>}
+            {error && <p className="rounded-xl border border-rose-300/25 bg-rose-400/10 px-3 py-2 text-sm text-rose-100 break-words">{error}</p>}
             <GlowButton disabled={isSubmitting} className="w-full">
               {isSubmitting ? 'Authenticating...' : 'Login'}
             </GlowButton>
           </form>
 
           <p className="mt-5 text-center text-sm text-slate-400">
-            New here? <Link className="font-bold text-violet-700 hover:text-violet-950" to="/register">Create account</Link>
+            New here? <Link className="font-bold text-violet-700 hover:text-violet-950 break-words" to="/register">Create account</Link>
           </p>
 
           <div className="mt-6 flex items-center gap-3">

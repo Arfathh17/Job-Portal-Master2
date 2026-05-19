@@ -16,15 +16,15 @@ function getSessionId(locationState) {
 function MarkdownLite({ text }) {
   if (!text) return null;
   return (
-    <div className="space-y-2 text-sm leading-6 text-slate-300">
+    <div className="space-y-2 text-xs sm:text-sm leading-6 text-slate-300">
       {text.split('\n').filter(Boolean).map((line, index) => {
         if (line.startsWith('##')) {
-          return <h3 key={index} className="pt-3 text-base font-black text-white">{line.replace(/^#+\s*/, '')}</h3>;
+          return <h3 key={index} className="pt-3 text-sm sm:text-base font-black text-white break-words">{line.replace(/^#+\s*/, '')}</h3>;
         }
         if (line.startsWith('-')) {
-          return <p key={index} className="pl-3">{line}</p>;
+          return <p key={index} className="pl-3 break-words">{line}</p>;
         }
-        return <p key={index}>{line}</p>;
+        return <p key={index} className="break-words">{line}</p>;
       })}
     </div>
   );
@@ -66,52 +66,53 @@ export default function AFAISummary() {
 
   return (
     <MotionPage className="pb-16">
-      <header className="mx-auto max-w-7xl px-5 pt-8">
+      <header className="mx-auto w-full max-w-7xl px-4 pt-8 sm:px-6 md:px-10">
         <GlassCard className="cinematic-stage flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between" hover={false}>
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/afai/interview')} className="icon-btn" aria-label="Back to interview">
+          <div className="flex items-center gap-3 min-w-0">
+            <button onClick={() => navigate('/afai/interview')} className="icon-btn flex-shrink-0" aria-label="Back to interview">
               <ArrowLeft size={18} />
             </button>
-            <div>
+            <div className="min-w-0">
               <NeonBadge>AFAI final report</NeonBadge>
-              <h1 className="afai-wordmark mt-2 text-3xl font-black text-white">Interview performance summary</h1>
+              <h1 className="afai-wordmark mt-2 text-xl sm:text-2xl md:text-3xl font-black text-white break-words">Interview performance summary</h1>
             </div>
           </div>
-          <button onClick={() => navigate('/afai')} className="contrast-action inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2 text-sm font-black text-white transition hover:bg-violet-900">
+          <button onClick={() => navigate('/afai')} className="contrast-action inline-flex items-center gap-2 rounded-xl bg-slate-950 px-3 sm:px-4 py-2 text-xs sm:text-sm font-black text-white transition hover:bg-violet-900 flex-shrink-0">
             <RotateCcw size={16} />
-            New interview
+            <span className="hidden xs:inline">New interview</span>
+            <span className="xs:hidden">New</span>
           </button>
         </GlassCard>
       </header>
 
-      <section className="mx-auto grid max-w-7xl gap-5 px-5 py-5 lg:grid-cols-[340px_1fr]">
+      <section className="mx-auto grid w-full max-w-7xl gap-5 px-4 py-5 sm:px-6 md:px-10 lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]">
         <aside className="space-y-4">
-          <GlassCard className="p-5">
+          <GlassCard className="p-4 sm:p-5">
             <div className="flex items-center gap-3">
-              <Gauge className="text-violet-700" size={23} />
-              <h2 className="text-lg font-black text-white">Score</h2>
+              <Gauge className="text-violet-700 flex-shrink-0" size={23} />
+              <h2 className="text-base sm:text-lg font-black text-white">Score</h2>
             </div>
-            <p className="mt-4 text-4xl font-black text-white">{summary?.averageScore ?? '--'}<span className="text-base text-slate-500">/100</span></p>
-            <p className="mt-1 text-sm font-semibold text-slate-400">{summary?.performanceLevel || 'Generating...'}</p>
+            <p className="mt-4 text-3xl sm:text-4xl font-black text-white">{summary?.averageScore ?? '--'}<span className="text-sm sm:text-base text-slate-500">/100</span></p>
+            <p className="mt-1 text-xs sm:text-sm font-semibold text-slate-400">{summary?.performanceLevel || 'Generating...'}</p>
           </GlassCard>
 
-          <GlassCard className="p-5">
+          <GlassCard className="p-4 sm:p-5">
             <div className="flex items-center gap-3">
-              <BadgeCheck className="text-violet-700" size={23} />
-              <h2 className="text-lg font-black text-white">Hiring signal</h2>
+              <BadgeCheck className="text-violet-700 flex-shrink-0" size={23} />
+              <h2 className="text-base sm:text-lg font-black text-white">Hiring signal</h2>
             </div>
-            <p className="mt-4 text-sm leading-6 text-slate-300">{summary?.hiringRecommendation || 'Pending final analysis.'}</p>
+            <p className="mt-4 text-xs sm:text-sm leading-6 text-slate-300 break-words">{summary?.hiringRecommendation || 'Pending final analysis.'}</p>
           </GlassCard>
         </aside>
 
-        <GlassCard className="p-5">
+        <GlassCard className="p-4 sm:p-5">
           <div className="mb-5 flex items-center gap-3">
-            <BookOpenCheck className="text-violet-700" size={23} />
-            <h2 className="text-lg font-black text-white">AFAI analysis</h2>
+            <BookOpenCheck className="text-violet-700 flex-shrink-0" size={23} />
+            <h2 className="text-base sm:text-lg font-black text-white">AFAI analysis</h2>
           </div>
 
-          {isLoading && <p className="text-sm text-slate-400">Generating final interview report...</p>}
-          {error && <p className="rounded-xl border border-rose-300/25 bg-rose-400/10 px-3 py-2 text-sm text-rose-100">{error}</p>}
+          {isLoading && <p className="text-xs sm:text-sm text-slate-400">Generating final interview report...</p>}
+          {error && <p className="rounded-xl border border-rose-300/25 bg-rose-400/10 px-3 py-2 text-xs sm:text-sm text-rose-100 break-words">{error}</p>}
           {!isLoading && !error && <MarkdownLite text={summary?.aiSummary} />}
         </GlassCard>
       </section>

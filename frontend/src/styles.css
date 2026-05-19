@@ -18,6 +18,8 @@
 
   html {
     scroll-behavior: smooth;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   body {
@@ -29,6 +31,19 @@
     font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
 
+  #root {
+    min-height: 100vh;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    min-width: 0;
+  }
+
   ::selection {
     background: rgba(196, 181, 253, 0.42);
     color: #111827;
@@ -36,8 +51,24 @@
 }
 
 @layer components {
+  /* Text wrapping utilities - prevent mid-word breaks */
+  .text-wrap {
+    word-break: normal;
+    overflow-wrap: break-word;
+    white-space: normal;
+    hyphens: auto;
+  }
+
+  /* Apply to all interactive text */
+  label, input, textarea, select, button, h1, h2, h3, h4, h5, h6, p, span {
+    word-break: normal;
+    overflow-wrap: break-word;
+    max-width: 100%;
+  }
+
   .field {
     width: 100%;
+    max-width: 100%;
     border-radius: 0.95rem;
     border: 1px solid rgba(167, 139, 250, 0.22);
     background: rgba(255, 255, 255, 0.82);
@@ -46,6 +77,8 @@
     outline: none;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 12px 32px rgba(109, 40, 217, 0.055);
     transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease, transform 180ms ease;
+    word-break: normal;
+    overflow-wrap: break-word;
   }
 
   .field::placeholder {
@@ -89,6 +122,7 @@
   .glass-panel {
     position: relative;
     overflow: hidden;
+    max-width: 100%;
     --local-x: 50%;
     --local-y: 0%;
     --tilt-x: 0deg;
@@ -118,6 +152,7 @@
   }
 
   .premium-card {
+    max-width: 100%;
     border-radius: 1rem;
     border: 1px solid rgba(167, 139, 250, 0.18);
     background:
@@ -153,8 +188,8 @@
     position: absolute;
     left: var(--cursor-x);
     top: var(--cursor-y);
-    height: 34rem;
-    width: 34rem;
+    height: min(34rem, 120vw);
+    width: min(34rem, 120vw);
     transform: translate(-50%, -50%);
     border-radius: 999px;
     background: radial-gradient(circle, rgba(221, 214, 254, 0.44), rgba(245, 243, 255, 0.24) 42%, transparent 70%);
@@ -209,7 +244,7 @@
 
   .product-sculpture {
     position: relative;
-    min-height: 260px;
+    min-height: clamp(200px, 40vh, 320px);
     perspective: 1000px;
   }
 
@@ -253,6 +288,7 @@
   .cinematic-stage {
     position: relative;
     overflow: hidden;
+    max-width: 100%;
     border: 1px solid rgba(167, 139, 250, 0.22);
     background:
       radial-gradient(circle at 72% 18%, rgba(221, 214, 254, 0.72), transparent 30%),
@@ -260,6 +296,11 @@
       linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(245, 243, 255, 0.78)),
       #ffffff;
     box-shadow: 0 38px 120px rgba(88, 28, 135, 0.12);
+    min-height: clamp(360px, 50vh, 720px);
+  }
+
+  .cinematic-stage.image-reveal {
+    min-height: clamp(320px, 60vh, 720px);
   }
 
   .cinematic-stage::after {
@@ -280,6 +321,14 @@
   .masked-headline {
     display: inline;
     font-family: "Space Grotesk", Inter, system-ui, sans-serif;
+    max-width: 100%;
+    overflow-wrap: break-word;
+  }
+
+  .masked-word {
+    display: inline-block;
+    max-width: 100%;
+    white-space: normal;
   }
 
   .masked-letter-wrap {
@@ -302,16 +351,22 @@
 
   .hero-type {
     font-family: "Space Grotesk", Inter, system-ui, sans-serif;
-    font-size: clamp(3.2rem, 10vw, 8.75rem);
-    line-height: 0.84;
+    font-size: clamp(3rem, 8vw, 7.75rem);
+    line-height: 0.9;
     letter-spacing: 0;
+    max-width: 100%;
+    overflow: hidden;
+    overflow-wrap: break-word;
   }
 
   .dashboard-title {
     font-family: "Space Grotesk", Inter, system-ui, sans-serif;
-    font-size: clamp(2.65rem, 6vw, 5.6rem);
-    line-height: 0.9;
+    font-size: clamp(1.875rem, 7vw, 5.6rem);
+    line-height: 0.95;
     letter-spacing: 0;
+    max-width: 100%;
+    overflow: hidden;
+    overflow-wrap: break-word;
   }
 
   .brand-chip {
@@ -488,5 +543,106 @@
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.001ms !important;
+  }
+}
+
+/* Responsive media queries */
+@media (max-width: 1024px) {
+  .cinematic-stage.image-reveal {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .cinematic-stage {
+    border-radius: 1.25rem;
+  }
+
+  .field {
+    padding: 0.75rem 0.875rem;
+  }
+
+  .product-sculpture {
+    min-height: clamp(160px, 30vh, 260px);
+  }
+
+  .sculpture-pane:nth-child(1) {
+    inset: 12px 48px auto 12px;
+    height: 100px;
+  }
+
+  .sculpture-pane:nth-child(2) {
+    inset: 70px 12px auto auto;
+    height: 90px;
+    width: 65%;
+  }
+
+  .sculpture-pane:nth-child(3) {
+    inset: auto auto 4px 70px;
+    height: 65px;
+    width: 55%;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-type {
+    font-size: clamp(1.875rem, 10vw, 3.2rem);
+    line-height: 0.96;
+  }
+
+  .dashboard-title {
+    font-size: clamp(1.875rem, 9vw, 2.85rem);
+    line-height: 1;
+  }
+
+  .field {
+    padding: 0.7rem 0.8rem;
+    font-size: 16px;
+  }
+
+  .product-sculpture {
+    min-height: clamp(140px, 25vh, 220px);
+  }
+
+  .sculpture-pane:nth-child(1) {
+    inset: 8px 32px auto 8px;
+    height: 80px;
+  }
+
+  .sculpture-pane:nth-child(2) {
+    inset: 50px 8px auto auto;
+    height: 70px;
+    width: 70%;
+  }
+
+  .sculpture-pane:nth-child(3) {
+    inset: auto auto 2px 50px;
+    height: 55px;
+    width: 60%;
+  }
+}
+
+@media (max-width: 360px) {
+  body {
+    font-size: 14px;
+  }
+
+  .field {
+    padding: 0.65rem 0.75rem;
+    border-radius: 0.8rem;
+    font-size: 16px;
+  }
+
+  .icon-btn {
+    height: 2.25rem;
+    width: 2.25rem;
+  }
+
+  .hero-type {
+    font-size: clamp(1.75rem, 11vw, 2.35rem);
+  }
+
+  .dashboard-title {
+    font-size: clamp(1.75rem, 10vw, 2.2rem);
   }
 }

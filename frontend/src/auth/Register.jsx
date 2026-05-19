@@ -45,11 +45,11 @@ export default function Register() {
   };
 
   return (
-    <MotionPage className="grid min-h-screen place-items-center px-4 py-6 sm:px-6">
-      <div className="grid w-full max-w-7xl gap-5 lg:grid-cols-[470px_minmax(0,1.24fr)]">
-        <GlassCard className="mx-auto flex w-full max-w-md flex-col justify-center p-6 sm:p-8 lg:max-w-none" hover={false}>
+    <MotionPage className="grid min-h-screen place-items-center px-4 py-6 sm:px-6 md:px-10">
+      <div className="grid w-full max-w-7xl gap-5 lg:grid-cols-[minmax(360px,470px)_minmax(0,1.24fr)]">
+        <GlassCard className="mx-auto flex w-full max-w-md max-w-full flex-col justify-center p-6 sm:p-8 lg:max-w-none" hover={false}>
           <NeonBadge><BadgeCheck size={14} /> Start premium access</NeonBadge>
-          <h1 className="afai-wordmark mt-5 text-4xl font-black leading-none text-white sm:text-5xl">Claim your workflow.</h1>
+          <h1 className="afai-wordmark mt-5 overflow-hidden break-words text-3xl font-black leading-tight text-white sm:text-4xl sm:leading-none">Claim your workflow.</h1>
           <p className="mt-4 text-sm leading-6 text-slate-400">Choose the workspace that matches your side of the platform.</p>
 
           <form onSubmit={submit} className="mt-7 space-y-4">
@@ -84,13 +84,13 @@ export default function Register() {
                 <option value="recruiter">Recruiter</option>
               </select>
             </label>
-            {error && <p className="rounded-xl border border-rose-300/25 bg-rose-400/10 px-3 py-2 text-sm text-rose-100">{error}</p>}
+            {error && <p className="rounded-xl border border-rose-300/25 bg-rose-400/10 px-3 py-2 text-sm text-rose-100 break-words">{error}</p>}
             <GlowButton disabled={isSubmitting} className="w-full">
               {isSubmitting ? 'Creating account...' : 'Register'}
             </GlowButton>
           </form>
           <p className="mt-5 text-center text-sm text-slate-400">
-            Already registered? <Link className="font-bold text-violet-700 hover:text-violet-950" to="/login">Login</Link>
+            Already registered? <Link className="font-bold text-violet-700 hover:text-violet-950 break-words" to="/login">Login</Link>
           </p>
 
           <div className="mt-6 flex items-center gap-3">
@@ -110,10 +110,10 @@ export default function Register() {
           </button>
         </GlassCard>
 
-        <section className="cinematic-stage image-reveal hidden min-h-[720px] rounded-[2rem] p-7 lg:block xl:p-10">
+        <section className="cinematic-stage image-reveal hidden max-w-full flex-col justify-between rounded-[2rem] p-7 lg:flex xl:p-10">
           <div className="relative z-10">
           <NeonBadge>Designed for real workflows</NeonBadge>
-          <h2 className="hero-type mt-10 max-w-5xl font-black uppercase text-white">
+          <h2 className="hero-type mt-10 max-w-5xl overflow-hidden break-words text-3xl font-black uppercase leading-tight text-white sm:text-4xl md:text-6xl lg:text-7xl lg:leading-none">
             <MaskedHeadline>Career command center</MaskedHeadline>
           </h2>
           <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-300">
@@ -127,7 +127,7 @@ export default function Register() {
               <div className="mt-3 h-2 w-1/2 rounded-full bg-white/10" />
             </div>
             <div className="sculpture-pane p-4">
-              <p className="text-sm font-bold text-stone-100">Recruiter workspace</p>
+            <p className="text-sm font-bold text-stone-100">Recruiter Workspace</p>
               <div className="mt-4 grid grid-cols-3 gap-2">
                 <span className="h-10 rounded-xl bg-white/[0.07]" />
                 <span className="h-10 rounded-xl bg-white/[0.11]" />
@@ -139,7 +139,7 @@ export default function Register() {
             </div>
           </div>
           <div className="relative z-10 mt-8 grid gap-4 sm:grid-cols-2">
-            {['Candidate dashboard', 'Recruiter workspace', 'Resume analyzer', 'AFAI interview simulator'].map((item, index) => (
+            {['Candidate Dashboard', 'Recruiter Workspace', 'Resume Analyzer', 'AFAI Interview Simulator'].map((item, index) => (
               <div key={item} className="luxury-table-row premium-card flex items-center justify-between p-4">
                 <span className="font-semibold">{item}</span>
                 <span className="text-sm font-black text-slate-400">0{index + 1}</span>

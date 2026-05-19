@@ -2,7 +2,7 @@ import { GlassCard } from '../../components/PremiumUI';
 
 const labels = {
   questionCount: 'Questions',
-  averageScore: 'Avg score',
+  averageScore: 'Avg Score',
   currentDifficulty: 'Difficulty',
   performanceLevel: 'Level',
 };
@@ -13,16 +13,16 @@ export default function ScoreStrip({ stats }) {
   const items = [
     ['questionCount', stats.questionCount || 0],
     ['averageScore', stats.averageScore ? `${stats.averageScore}/100` : 'Pending'],
-    ['currentDifficulty', stats.currentDifficulty || 'adaptive'],
-    ['performanceLevel', stats.performanceLevel || 'Warming up'],
+    ['currentDifficulty', stats.currentDifficulty || 'Adaptive'],
+    ['performanceLevel', stats.performanceLevel || 'Warming Up'],
   ];
 
   return (
-    <div className="grid gap-3 sm:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
       {items.map(([key, value]) => (
-        <GlassCard key={key} className="p-3" hover={false}>
+        <GlassCard key={key} className="min-w-0 p-2 sm:p-3" hover={false}>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">{labels[key]}</p>
-          <p className="mt-1 text-sm font-black text-white">{value}</p>
+          <p className="mt-1 text-xs sm:text-sm font-black text-white break-words">{value}</p>
         </GlassCard>
       ))}
     </div>

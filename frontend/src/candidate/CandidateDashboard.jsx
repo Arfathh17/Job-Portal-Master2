@@ -4,13 +4,13 @@ import { GlassCard, GlowButton, MotionPage, NeonBadge, StatCard } from '../compo
 import { useAuth } from '../context/AuthContext';
 
 const actions = [
-  { title: 'Browse roles', description: 'Find openings and send applications from your candidate profile.', href: '/jobs', icon: Briefcase, label: 'Search' },
+  { title: 'Browse Roles', description: 'Find openings and send applications from your candidate profile.', href: '/jobs', icon: Briefcase, label: 'Search' },
   { title: 'Practice with AFAI', description: 'Run a focused mock interview that adapts to your answer quality.', href: '/afai', icon: Bot, label: 'Interview' },
-  { title: 'Analyze resume', description: 'Check ATS gaps, strengths, and role fit before applying.', href: '/resume-analyzer', icon: FileText, label: 'Review' },
-  { title: 'Track applications', description: 'Return to your job pipeline and keep momentum visible.', href: '/jobs', icon: ListChecks, label: 'Pipeline' },
+  { title: 'Analyze Resume', description: 'Check ATS gaps, strengths, and role fit before applying.', href: '/resume-analyzer', icon: FileText, label: 'Review' },
+  { title: 'Track Applications', description: 'Return to your job pipeline and keep momentum visible.', href: '/jobs', icon: ListChecks, label: 'Pipeline' },
 ];
 
-const timeline = ['Tune resume keywords', 'Apply to focused roles', 'Practice one AFAI round'];
+const timeline = ['Tune Resume Keywords', 'Apply To Focused Roles', 'Practice One AFAI Round'];
 
 export default function CandidateDashboard() {
   const { user } = useAuth();
@@ -18,22 +18,22 @@ export default function CandidateDashboard() {
   const FeaturedIcon = featured.icon;
 
   return (
-    <MotionPage className="mx-auto max-w-7xl px-5 pb-16 pt-8">
+    <MotionPage className="mx-auto w-full max-w-7xl px-4 pb-16 pt-8 sm:px-6 md:px-10">
       <section className="grid gap-5 lg:grid-cols-[minmax(0,1.45fr)_360px]">
-        <GlassCard className="cinematic-stage min-h-[500px] p-6 sm:p-8" hover={false}>
-          <NeonBadge><Sparkles size={14} /> Candidate workspace</NeonBadge>
+        <GlassCard className="cinematic-stage min-h-auto p-5 sm:p-8" hover={false}>
+          <NeonBadge><Sparkles size={14} /> Candidate Workspace</NeonBadge>
           <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_285px] lg:items-end">
             <div>
-              <h1 className="dashboard-title max-w-4xl font-black uppercase text-white">
-                Welcome back, <span className="lavender-text">{user?.name}</span>
+              <h1 className="dashboard-title max-w-4xl overflow-hidden break-words text-3xl font-black uppercase leading-tight text-white sm:text-4xl md:text-6xl lg:text-7xl lg:leading-none">
+                Welcome back, <span className="lavender-text break-words">{user?.name}</span>
               </h1>
-              <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
+              <p className="mt-6 max-w-2xl text-base sm:text-lg leading-7 sm:leading-8 text-slate-300">
                 Choose better roles, sharpen your resume signal, and rehearse before the real conversation.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
-                <GlowButton as={Link} to="/jobs">Find a role</GlowButton>
+                <GlowButton as={Link} to="/jobs">Find A Role</GlowButton>
                 <Link to="/resume-analyzer" className="magnetic-btn inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.045] px-5 py-3 text-sm font-bold text-stone-100 transition hover:border-white/20 hover:bg-white/[0.075]">
-                  Improve resume <MoveUpRight size={17} />
+                  Improve Resume <MoveUpRight size={17} />
                 </Link>
               </div>
             </div>
@@ -44,8 +44,8 @@ export default function CandidateDashboard() {
                 <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/80 text-violet-700">
                   <FeaturedIcon size={23} />
                 </span>
-                <p className="mt-5 text-xs font-black uppercase tracking-[0.2em] text-slate-500">Next best move</p>
-                <h2 className="mt-2 text-2xl font-black text-stone-50">{featured.title}</h2>
+                <p className="mt-5 text-xs font-black uppercase tracking-[0.2em] text-slate-500">Next Best Move</p>
+                <h2 className="mt-2 text-xl sm:text-2xl font-black text-stone-50 break-words">{featured.title}</h2>
                 <p className="mt-2 text-sm leading-6 text-slate-400">{featured.description}</p>
               </div>
             </Link>
@@ -53,15 +53,15 @@ export default function CandidateDashboard() {
         </GlassCard>
 
         <div className="grid gap-4">
-          <StatCard label="Profile signal" value="Ready" icon={Zap} />
-          <StatCard label="Preparation mode" value="Focused" icon={TrendingUp} tone="purple" />
+          <StatCard label="Profile Signal" value="Ready" icon={Zap} />
+          <StatCard label="Preparation Mode" value="Focused" icon={TrendingUp} tone="purple" />
           <GlassCard className="p-5">
-            <p className="text-sm font-black text-stone-50">Today's rhythm</p>
+            <p className="text-sm font-black text-stone-50">Today's Rhythm</p>
             <div className="mt-4 space-y-4">
               {timeline.map((item, index) => (
                 <div key={item} className="flex gap-3">
                   <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.055] text-[11px] font-black text-slate-300">{index + 1}</span>
-                  <p className="text-sm leading-6 text-slate-400">{item}</p>
+                  <p className="text-sm leading-6 text-slate-400 break-words">{item}</p>
                 </div>
               ))}
             </div>
@@ -72,14 +72,14 @@ export default function CandidateDashboard() {
       <section data-reveal="section" className="mt-6 overflow-hidden rounded-[1.25rem] border border-white/10 bg-white/[0.035] py-4">
         <div className="kinetic-marquee gap-3">
           {[...actions, ...actions].map((action, index) => (
-            <span key={`${action.title}-${index}`} className="mx-2 rounded-full border border-white/10 px-5 py-2 text-xs font-black uppercase tracking-[0.2em] text-slate-400">
+            <span key={`${action.title}-${index}`} className="mx-2 rounded-full border border-white/10 px-5 py-2 text-xs font-black uppercase tracking-[0.2em] text-slate-400 whitespace-nowrap">
               {action.title}
             </span>
           ))}
         </div>
       </section>
 
-      <section data-reveal="section" className="mt-6 grid gap-4 lg:grid-cols-3">
+      <section data-reveal="section" className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {actions.filter(action => action.title !== featured.title).map(action => {
           const Icon = action.icon;
           return (
@@ -91,7 +91,7 @@ export default function CandidateDashboard() {
                   </span>
                   <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{action.label}</span>
                 </div>
-                <h2 className="mt-5 text-xl font-black text-stone-50">{action.title}</h2>
+                <h2 className="mt-5 text-lg sm:text-xl font-black text-stone-50 break-words">{action.title}</h2>
                 <p className="mt-2 text-sm leading-6 text-slate-400">{action.description}</p>
               </GlassCard>
             </Link>

@@ -14,7 +14,7 @@ export function MotionPage({ children, className = '' }) {
       animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
       exit={{ opacity: 0, y: -10, filter: 'blur(8px)' }}
       transition={{ duration: 0.52, ease: [0.16, 1, 0.3, 1] }}
-      className={cn('relative min-h-screen text-slate-950', className)}
+      className={cn('relative min-h-screen w-full max-w-full overflow-x-hidden text-slate-950', className)}
     >
       {children}
     </motion.main>
@@ -189,12 +189,18 @@ export function NeonBadge({ children, className = '' }) {
 
 export function MaskedHeadline({ children, className = '' }) {
   const text = String(children);
+  const words = text.split(' ');
 
   return (
-    <span className={cn('masked-headline', className)} aria-label={text}>
-      {text.split('').map((char, index) => (
-        <span className="masked-letter-wrap" aria-hidden="true" key={`${char}-${index}`}>
-          <span className="masked-letter">{char === ' ' ? '\u00a0' : char}</span>
+    <span className={cn('masked-headline break-words overflow-hidden', className)} aria-label={text}>
+      {words.map((word, wordIndex) => (
+        <span className="masked-word" aria-hidden="true" key={`${word}-${wordIndex}`}>
+          {word.split('').map((char, index) => (
+            <span className="masked-letter-wrap" key={`${char}-${wordIndex}-${index}`}>
+              <span className="masked-letter">{char}</span>
+            </span>
+          ))}
+          {wordIndex < words.length - 1 && ' '}
         </span>
       ))}
     </span>
@@ -206,7 +212,7 @@ export function EditorialShell({ eyebrow, title, copy, children, className = '' 
     <section data-reveal="section" className={cn('section-shell', className)}>
       <div>
         {eyebrow && <NeonBadge>{eyebrow}</NeonBadge>}
-        {title && <h2 className="mt-4 max-w-4xl text-4xl font-black leading-[0.92] tracking-normal text-slate-950 sm:text-6xl lg:text-7xl">{title}</h2>}
+        {title && <h2 className="mt-4 max-w-4xl overflow-hidden break-words text-3xl font-black leading-tight tracking-normal text-slate-950 sm:text-4xl md:text-6xl lg:text-7xl lg:leading-none">{title}</h2>}
       </div>
       {copy && <p className="max-w-2xl text-base leading-7 text-slate-600">{copy}</p>}
       {children}

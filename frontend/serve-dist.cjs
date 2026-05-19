@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const port = Number(process.env.PORT || 3000);
-const apiTarget = process.env.API_TARGET || 'http://127.0.0.1:5000';
+const apiTarget = process.env.VITE_API_URL || process.env.API_TARGET;
 const root = path.join(__dirname, 'dist');
 
 const mimeTypes = {
@@ -26,9 +26,15 @@ function sendFile(res, filePath) {
 }
 
 http.createServer((req, res) => {
-  const url = new URL(req.url, `http://localhost:${port}`);
+  const url = new URL(req.url, `http://0.0.0.0:${port}`);
 
   if (url.pathname.startsWith('/api')) {
+    if (!apiTarget) {
+      res.writeHead(502, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Backend API URL is not configured' }));
+      return;
+    }
+
     const proxyReq = http.request(
       new URL(`${url.pathname}${url.search}`, apiTarget),
       {
@@ -68,5 +74,5 @@ http.createServer((req, res) => {
 
   sendFile(res, filePath);
 }).listen(port, '0.0.0.0', () => {
-  console.log(`Frontend running at http://localhost:${port}`);
+  console.log(`Frontend running at http://0.0.0.0:${port}`);
 });

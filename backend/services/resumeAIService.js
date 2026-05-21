@@ -1,3 +1,5 @@
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+
 const ROLE_CONFIGS = [
   {
     role: 'Full Stack Developer',
@@ -308,6 +310,33 @@ function unique(items) {
     seen.add(key);
     return true;
   });
+}
+
+function isUsableGeminiKey(key) {
+  return typeof key === 'string'
+    && key.trim().length > 20
+    && !/your_|replace|placeholder|example/i.test(key);
+}
+
+function getGeminiModel() {
+  if (!isUsableGeminiKey(process.env.GEMINI_API_KEY)) return null;
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY.trim());
+  return genAI.getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-2.5-flash' });
+}
+
+function parseJson(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    const match = String(text || '').match(/\{[\s\S]*\}/);
+    if (!match) return null;
+
+    try {
+      return JSON.parse(match[0]);
+    } catch {
+      return null;
+    }
+  }
 }
 
 function titleCase(value) {
@@ -794,9 +823,198 @@ function buildAnalysis(resumeText, parsedData = {}) {
   };
 }
 
+function arrayOrFallback(source, fallback) {
+  return Array.isArray(source) && source.length ? source : fallback;
+}
+
+function normalizeRecommendedRoles(roles, fallbackRoles) {
+  if (!Array.isArray(roles) || !roles.length) return fallbackRoles;
+
+  const normalized = roles.slice(0, 5).map((role, index) => ({
+    role: role.role || fallbackRoles[index]?.role || 'General Professional',
+    matchPercentage: clamp(role.matchPercentage ?? role.score ?? fallbackRoles[index]?.matchPercentage ?? 50),
+    reason: role.reason || fallbackRoles[index]?.reason || 'Role fit is based on resume evidence and detected keywords.',
+    matchedSkills: arrayOrFallback(role.matchedSkills, fallbackRoles[index]?.matchedSkills || []),
+    missingSkills: Array.isArray(role.missingSkills) ? role.missingSkills : fallbackRoles[index]?.missingSkills || [],
+    salaryTrend: role.salaryTrend || fallbackRoles[index]?.salaryTrend || 'Demand depends on role fit, portfolio strength, measurable outcomes, and market conditions.',
+    recommendedLearning: arrayOrFallback(role.recommendedLearning, fallbackRoles[index]?.recommendedLearning || []),
+  }));
+
+  return unique([
+    ...normalized.map(role => role.role),
+    ...fallbackRoles.map(role => role.role),
+  ])
+    .slice(0, 5)
+    .map(roleName => normalized.find(role => role.role === roleName) || fallbackRoles.find(role => role.role === roleName));
+}
+
+function normalizeSectionAnalysis(sections, fallbackSections) {
+  if (!Array.isArray(sections) || !sections.length) return fallbackSections;
+
+  return sections.slice(0, 8).map((section, index) => ({
+    section: section.section || fallbackSections[index]?.section || 'Resume Section',
+    score: clamp(section.score ?? fallbackSections[index]?.score ?? 50),
+    status: section.status || fallbackSections[index]?.status || 'Developing',
+    feedback: section.feedback || fallbackSections[index]?.feedback || 'Section reviewed from resume content.',
+    recommendation: section.recommendation || fallbackSections[index]?.recommendation || 'Add more role-specific evidence and measurable outcomes.',
+    evidence: section.evidence || fallbackSections[index]?.evidence || '',
+  }));
+}
+
+function normalizeGeminiAnalysis(raw, fallback) {
+  const source = raw && typeof raw === 'object' ? raw : {};
+
+  return {
+    ...fallback,
+    atsScore: fallback.atsScore,
+    overallScore: fallback.overallScore,
+    candidateName: typeof source.candidateName === 'string' ? source.candidateName : fallback.candidateName,
+    detectedRole: fallback.detectedRole,
+    welcomeMessage: typeof source.welcomeMessage === 'string' ? source.welcomeMessage : fallback.welcomeMessage,
+    scoreBreakdown: fallback.scoreBreakdown,
+    sectionAnalysis: normalizeSectionAnalysis(source.sectionAnalysis, fallback.sectionAnalysis),
+    recommendedRoles: normalizeRecommendedRoles(source.recommendedRoles || source.roleRecommendations, fallback.recommendedRoles),
+    bestCareerPath: fallback.bestCareerPath,
+    estimatedExperienceLevel: source.estimatedExperienceLevel || fallback.estimatedExperienceLevel,
+    nextTechnologiesToLearn: arrayOrFallback(source.nextTechnologiesToLearn, fallback.nextTechnologiesToLearn),
+    portfolioImprovements: arrayOrFallback(source.portfolioImprovements, fallback.portfolioImprovements),
+    suggestedCertifications: Array.isArray(source.suggestedCertifications) ? source.suggestedCertifications : fallback.suggestedCertifications,
+    topHiringCompanies: Array.isArray(source.topHiringCompanies) ? source.topHiringCompanies : fallback.topHiringCompanies,
+    strengths: arrayOrFallback(source.strengths, fallback.strengths),
+    weaknesses: arrayOrFallback(source.weaknesses, fallback.weaknesses),
+    improvements: arrayOrFallback(source.actionableImprovements || source.improvements, fallback.improvements),
+    actionableImprovements: arrayOrFallback(source.actionableImprovements || source.improvements, fallback.actionableImprovements),
+    missingKeywordSuggestions: fallback.missingKeywordSuggestions,
+    matchedRoleKeywords: fallback.matchedRoleKeywords,
+    extractedSkills: unique([
+      ...fallback.extractedSkills,
+      ...(Array.isArray(source.extractedSkills) ? source.extractedSkills : []),
+      ...(Array.isArray(source.skills) ? source.skills : []),
+    ]),
+    resumeQualitySignals: {
+      ...fallback.resumeQualitySignals,
+      ...(source.resumeQualitySignals && typeof source.resumeQualitySignals === 'object' ? source.resumeQualitySignals : {}),
+    },
+    mode: 'gemini-env',
+  };
+}
+
+function buildGeminiPrompt(resumeText, parsedData, fallback) {
+  return `
+You are AFAI Resume IQ, a professional resume analyst.
+
+Use ONLY the candidate's actual resume text and parsed context. Do not invent skills, companies, metrics, roles, certifications, links, or projects. Do not use demo data.
+
+Your job:
+1. Detect the closest resume domain/role.
+2. Analyze the resume with role-specific ATS keywords.
+3. Score consistently using these weights:
+   - Skills: 20%
+   - Projects/Experience: 25%
+   - ATS Optimization: 20%
+   - Resume Structure: 15%
+   - Education: 10%
+   - Achievements/Impact: 10%
+4. Make suggestions specific to evidence in this resume.
+
+Supported roles:
+${ROLE_CONFIGS.map(config => `- ${config.role}: ${config.keywords.join(', ')}`).join('\n')}
+- ${GENERAL_CONFIG.role}: ${GENERAL_CONFIG.keywords.join(', ')}
+
+Role-aware baseline already detected:
+${JSON.stringify({
+    detectedRole: fallback.detectedRole,
+    matchedRoleKeywords: fallback.matchedRoleKeywords,
+    missingKeywordSuggestions: fallback.missingKeywordSuggestions,
+    extractedSkills: fallback.extractedSkills,
+    scoreBreakdown: fallback.scoreBreakdown,
+  }, null, 2)}
+
+Return ONLY valid JSON in this shape:
+{
+  "atsScore": 0,
+  "overallScore": 0,
+  "candidateName": "",
+  "detectedRole": "",
+  "welcomeMessage": "",
+  "scoreBreakdown": {
+    "skills": 0,
+    "projectsExperience": 0,
+    "atsOptimization": 0,
+    "resumeStructure": 0,
+    "education": 0,
+    "achievementsImpact": 0
+  },
+  "sectionAnalysis": [
+    {
+      "section": "Skills",
+      "score": 0,
+      "status": "Strong|Developing|Needs work",
+      "feedback": "specific evidence-based feedback",
+      "recommendation": "specific role-aware recommendation",
+      "evidence": "short evidence from resume"
+    }
+  ],
+  "recommendedRoles": [
+    {
+      "role": "",
+      "matchPercentage": 0,
+      "reason": "evidence-based reason",
+      "matchedSkills": [],
+      "missingSkills": [],
+      "salaryTrend": "short market note",
+      "recommendedLearning": []
+    }
+  ],
+  "bestCareerPath": "",
+  "estimatedExperienceLevel": "Beginner|Intermediate|Advanced",
+  "nextTechnologiesToLearn": [],
+  "portfolioImprovements": [],
+  "suggestedCertifications": [],
+  "topHiringCompanies": [],
+  "strengths": [],
+  "weaknesses": [],
+  "actionableImprovements": [],
+  "missingKeywordSuggestions": [],
+  "matchedRoleKeywords": [],
+  "extractedSkills": []
+}
+
+Resume text:
+${String(resumeText || '').slice(0, 16000)}
+
+Parsed context:
+${JSON.stringify(parsedData || {}, null, 2).slice(0, 7000)}
+`.trim();
+}
+
 class ResumeAIService {
   async analyzeResumeForRoles(resumeText, parsedData = {}) {
-    return buildAnalysis(resumeText, parsedData);
+    const fallback = buildAnalysis(resumeText, parsedData);
+    const model = getGeminiModel();
+
+    if (!model) {
+      return {
+        ...fallback,
+        mode: 'role-aware-env-fallback',
+        providerNote: 'GEMINI_API_KEY is not configured; used role-aware local analysis.',
+      };
+    }
+
+    try {
+      const result = await model.generateContent(buildGeminiPrompt(resumeText, parsedData, fallback));
+      const responseText = result.response.text();
+      const parsed = parseJson(responseText);
+
+      return normalizeGeminiAnalysis(parsed, fallback);
+    } catch (error) {
+      console.warn('Gemini Resume IQ analysis failed, using role-aware fallback:', error.message);
+      return {
+        ...fallback,
+        mode: 'role-aware-gemini-fallback',
+        providerNote: `Gemini analysis failed: ${error.message}`,
+      };
+    }
   }
 }
 

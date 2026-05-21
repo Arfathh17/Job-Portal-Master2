@@ -16,11 +16,15 @@ const { connectDB } = require('./config/db');
 const { processChatbotMessage } = require('./services/chatbot');
 
 const app = express();
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://afai-frontend.onrender.com',
+];
 
 // ─── Middleware ─────────────────────────────────────────────────────────────────
 // CORS — allow the frontend origins (set your deployed frontend URL)
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: allowedOrigins,
   credentials: true,
 }));
 app.use(express.json());
@@ -75,7 +79,7 @@ const startServer = async () => {
 
   const io = socketIO(server, {
     cors: {
-      origin: 'http://localhost:5173',
+      origin: allowedOrigins,
       methods: ['GET', 'POST'],
       credentials: true,
     },

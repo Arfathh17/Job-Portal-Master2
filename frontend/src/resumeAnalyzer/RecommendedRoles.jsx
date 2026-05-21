@@ -19,8 +19,11 @@ function InfoList({ icon: Icon, title, items }) {
 }
 
 export default function RecommendedRoles({ analysis }) {
-  const roles = analysis?.recommendedRoles || analysis?.roleRecommendations || [];
+  const nestedAnalysis = analysis?.analysis || {};
+  const roles = analysis?.recommendedRoles || analysis?.roleRecommendations || nestedAnalysis.roleRecommendations || [];
   if (!roles.length) return null;
+  const detectedRole = analysis?.detectedRole || nestedAnalysis.detectedRole || roles[0]?.role;
+  const atsScore = analysis?.atsScore || nestedAnalysis.atsScore || analysis?.overallScore || nestedAnalysis.overallScore || '--';
 
   return (
     <section className="min-w-0 space-y-5 overflow-hidden">
@@ -28,14 +31,14 @@ export default function RecommendedRoles({ analysis }) {
         <div className="flex min-w-0 flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
             <NeonBadge>AI role recommendation</NeonBadge>
-            <h2 className="afai-wordmark mt-3 text-2xl sm:text-3xl font-black text-white break-words">{analysis.bestCareerPath || roles[0]?.role}</h2>
+            <h2 className="afai-wordmark mt-3 text-2xl sm:text-3xl font-black text-white break-words">{analysis.bestCareerPath || nestedAnalysis.bestCareerPath || roles[0]?.role}</h2>
             <p className="mt-2 text-xs sm:text-sm text-slate-400">
-              Estimated level: {analysis.estimatedExperienceLevel || 'Intermediate'}
+              Detected role: {detectedRole} · Estimated level: {analysis.estimatedExperienceLevel || nestedAnalysis.estimatedExperienceLevel || 'Intermediate'}
             </p>
           </div>
           <div className="w-full rounded-2xl border border-white/10 bg-white/[0.055] px-4 py-3 text-center md:w-auto">
-            <p className="text-2xl sm:text-3xl font-black text-white">{analysis.atsScore || analysis.overallScore || '--'}</p>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">ATS score</p>
+            <p className="text-2xl sm:text-3xl font-black text-white">{atsScore}</p>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">Role ATS score</p>
           </div>
         </div>
       </GlassCard>
@@ -47,11 +50,11 @@ export default function RecommendedRoles({ analysis }) {
       </div>
 
       <div className="grid min-w-0 gap-4 md:grid-cols-2">
-        <InfoList icon={Lightbulb} title="Next technologies to learn" items={analysis.nextTechnologiesToLearn} />
-        <InfoList icon={Compass} title="Portfolio improvements" items={analysis.portfolioImprovements} />
-        <InfoList icon={Award} title="Suggested certifications" items={analysis.suggestedCertifications} />
-        <InfoList icon={Building2} title="Top hiring companies" items={analysis.topHiringCompanies} />
-        <InfoList icon={GraduationCap} title="Resume strengths" items={analysis.strengths} />
+        <InfoList icon={Lightbulb} title="Role keyword gaps" items={analysis.nextTechnologiesToLearn || nestedAnalysis.nextTechnologiesToLearn} />
+        <InfoList icon={Compass} title="Role-specific improvements" items={analysis.portfolioImprovements || nestedAnalysis.portfolioImprovements} />
+        <InfoList icon={Award} title="Suggested certifications" items={analysis.suggestedCertifications || nestedAnalysis.suggestedCertifications} />
+        <InfoList icon={Building2} title="Top hiring companies" items={analysis.topHiringCompanies || nestedAnalysis.topHiringCompanies} />
+        <InfoList icon={GraduationCap} title="Resume strengths" items={analysis.strengths || nestedAnalysis.strengthAreas} />
       </div>
     </section>
   );

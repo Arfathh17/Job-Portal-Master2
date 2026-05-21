@@ -78,6 +78,7 @@ class ResumeController {
           atsScore: roleAnalysis.atsScore,
           overallScore: roleAnalysis.overallScore || roleAnalysis.atsScore,
           candidateName: roleAnalysis.candidateName,
+          detectedRole: roleAnalysis.detectedRole,
           welcomeMessage: roleAnalysis.welcomeMessage,
           scoreBreakdown: roleAnalysis.scoreBreakdown,
           yearsOfExperience: parsedData.yearsOfExperience || 0,
@@ -87,6 +88,7 @@ class ResumeController {
           sectionAnalysis: roleAnalysis.sectionAnalysis || [],
           actionableImprovements: roleAnalysis.actionableImprovements || roleAnalysis.improvements || [],
           missingKeywordSuggestions: roleAnalysis.missingKeywordSuggestions || [],
+          matchedRoleKeywords: roleAnalysis.matchedRoleKeywords || [],
           recommendedRoles: roleAnalysis.recommendedRoles.map(item => item.role),
           roleRecommendations: roleAnalysis.recommendedRoles,
           jobRecommendations,
@@ -128,6 +130,7 @@ class ResumeController {
         atsScore: roleAnalysis.atsScore,
         overallScore: roleAnalysis.overallScore || roleAnalysis.atsScore,
         candidateName: roleAnalysis.candidateName,
+        detectedRole: roleAnalysis.detectedRole,
         welcomeMessage: roleAnalysis.welcomeMessage,
         scoreBreakdown: roleAnalysis.scoreBreakdown,
         sectionAnalysis: roleAnalysis.sectionAnalysis,
@@ -136,6 +139,7 @@ class ResumeController {
         improvements: roleAnalysis.improvements,
         actionableImprovements: roleAnalysis.actionableImprovements,
         missingKeywordSuggestions: roleAnalysis.missingKeywordSuggestions,
+        matchedRoleKeywords: roleAnalysis.matchedRoleKeywords,
         roleRecommendations: roleAnalysis.recommendedRoles,
         recommendedRoles: roleAnalysis.recommendedRoles,
         jobRecommendations,
@@ -144,7 +148,8 @@ class ResumeController {
         nextTechnologiesToLearn: roleAnalysis.nextTechnologiesToLearn,
         portfolioImprovements: roleAnalysis.portfolioImprovements,
         suggestedCertifications: roleAnalysis.suggestedCertifications,
-        extractedSkills: resume.skills.technical,
+        resumeQualitySignals: roleAnalysis.resumeQualitySignals,
+        extractedSkills: roleAnalysis.extractedSkills || resume.skills.technical,
         experience: resume.experience,
         generatedQuestions: generatedQuestions.slice(0, 5) // Return first 5 questions
       });
@@ -184,11 +189,12 @@ class ResumeController {
       return res.json({
         success: true,
         atsScore: roleAnalysis.atsScore,
-        overallScore: roleAnalysis.atsScore,
+        overallScore: roleAnalysis.overallScore || roleAnalysis.atsScore,
         summary: roleAnalysis.bestCareerPath
           ? `Best current career fit: ${roleAnalysis.bestCareerPath}`
           : 'Resume analyzed successfully.',
         candidateName: roleAnalysis.candidateName,
+        detectedRole: roleAnalysis.detectedRole,
         welcomeMessage: roleAnalysis.welcomeMessage,
         scoreBreakdown: roleAnalysis.scoreBreakdown,
         skills: roleAnalysis.extractedSkills || [],
@@ -198,6 +204,7 @@ class ResumeController {
         actionableImprovements: roleAnalysis.actionableImprovements || roleAnalysis.improvements || [],
         sectionAnalysis: roleAnalysis.sectionAnalysis || [],
         missingKeywordSuggestions: roleAnalysis.missingKeywordSuggestions || [],
+        matchedRoleKeywords: roleAnalysis.matchedRoleKeywords || [],
         recommendedRoles: roleAnalysis.recommendedRoles,
         jobRecommendations,
         bestCareerPath: roleAnalysis.bestCareerPath,
@@ -207,6 +214,7 @@ class ResumeController {
         suggestedCertifications: roleAnalysis.suggestedCertifications,
         topHiringCompanies: roleAnalysis.topHiringCompanies,
         mode: roleAnalysis.mode,
+        resumeQualitySignals: roleAnalysis.resumeQualitySignals,
       });
     } catch (error) {
       console.error('Resume text analysis error:', error);

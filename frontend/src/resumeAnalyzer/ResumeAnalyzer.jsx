@@ -4,18 +4,37 @@ import { analyzeResumeText, uploadResume } from '../services/resumeService';
 import RecommendedRoles from './RecommendedRoles';
 import { GlassCard, GlowButton, MotionPage, NeonBadge } from '../components/PremiumUI';
 
-const TARGET_KEYWORDS = [
-  'React',
-  'Node.js',
-  'Express.js',
-  'MongoDB',
-  'REST API',
-  'Git',
-  'GitHub',
-  'Deployment',
-  'Authentication',
-  'AI integration',
-  'OpenAI API / Gemini API',
+const LOCAL_ROLE_CONFIGS = [
+  {
+    role: 'UX/UI Designer',
+    keywords: ['Figma', 'Wireframing', 'Prototyping', 'User Research', 'Usability Testing', 'Accessibility', 'Design Systems', 'Interaction Design', 'User Flow', 'Mobile Design'],
+    suggestions: ['Add portfolio case study links.', 'Show design process from research to prototype.', 'Include usability testing and design impact metrics.'],
+    careers: ['UX/UI Designer', 'Product Designer', 'UX Researcher'],
+  },
+  {
+    role: 'Full Stack Developer',
+    keywords: ['React', 'Node.js', 'Express.js', 'MongoDB', 'REST API', 'Authentication', 'GitHub', 'Deployment'],
+    suggestions: ['Add API, database, authentication, architecture, and deployment details.', 'Include live links and GitHub repositories.', 'Quantify performance or user impact.'],
+    careers: ['Full Stack Developer', 'MERN Stack Developer', 'Backend Developer'],
+  },
+  {
+    role: 'Data Analyst',
+    keywords: ['SQL', 'Excel', 'Power BI', 'Tableau', 'Python', 'Data Visualization', 'Dashboard', 'Statistics'],
+    suggestions: ['Add business questions, dataset size, dashboards, and decision impact.', 'Quantify reporting automation or insight outcomes.', 'Link dashboard samples if possible.'],
+    careers: ['Data Analyst', 'BI Analyst', 'Business Analyst'],
+  },
+  {
+    role: 'Digital Marketer',
+    keywords: ['SEO', 'Google Ads', 'Meta Ads', 'Content Marketing', 'Email Marketing', 'Analytics', 'Campaigns', 'Lead Generation'],
+    suggestions: ['Add campaign metrics such as ROAS, CTR, CPL, conversions, or traffic growth.', 'Mention analytics and ad platform tools.', 'Separate organic, paid, email, and content experience.'],
+    careers: ['Digital Marketer', 'SEO Specialist', 'Performance Marketer'],
+  },
+  {
+    role: 'Business Analyst',
+    keywords: ['Requirements Gathering', 'Stakeholder Management', 'BRD', 'FRD', 'User Stories', 'Process Mapping', 'SQL', 'UAT', 'Agile'],
+    suggestions: ['Show requirements translated into workflows, user stories, and delivered outcomes.', 'Quantify process improvements or cost savings.', 'Mention tools like Jira and Confluence.'],
+    careers: ['Business Analyst', 'Product Analyst', 'Functional Analyst'],
+  },
 ];
 
 function findCandidateName(text) {
@@ -31,8 +50,13 @@ function findCandidateName(text) {
 
 function localAnalyze(text) {
   const words = text.split(/\s+/).filter(Boolean);
-  const skills = ['React', 'Node.js', 'Express.js', 'MongoDB', 'REST API', 'JWT', 'Git', 'GitHub', 'Python', 'SQL', 'Docker', 'AWS', 'OpenAI', 'Gemini']
-    .filter(skill => new RegExp(skill.replace('.', '\\.'), 'i').test(text));
+  const detectedRoleConfig = [...LOCAL_ROLE_CONFIGS]
+    .map(config => ({
+      ...config,
+      matches: config.keywords.filter(keyword => new RegExp(keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\./g, '\\.?'), 'i').test(text)),
+    }))
+    .sort((a, b) => b.matches.length - a.matches.length)[0] || LOCAL_ROLE_CONFIGS[0];
+  const skills = detectedRoleConfig.matches;
   const candidateName = findCandidateName(text);
   const hasEmail = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(text);
   const hasPhone = /(?:\+?\d[\d\s().-]{7,}\d)/.test(text);
@@ -41,16 +65,12 @@ function localAnalyze(text) {
   const hasEducation = /\b(education|degree|university|college|bachelor|master|b\.tech)\b/i.test(text);
   const hasSummary = /\b(summary|professional summary|profile|objective)\b/i.test(text);
   const hasMetrics = /\b\d+%|\b\d+x|\b\d+\+|\b\d+\s*(users?|apis?|projects?|requests?)\b/i.test(text);
-  const matchedKeywords = TARGET_KEYWORDS.filter(keyword => {
-    const pattern = keyword === 'OpenAI API / Gemini API'
-      ? /(openai|gemini)/i
-      : new RegExp(keyword.replace(/\./g, '\\.?').replace(/\//g, '|'), 'i');
-    return pattern.test(text);
-  });
-  const missingKeywordSuggestions = TARGET_KEYWORDS.filter(keyword => !matchedKeywords.includes(keyword));
+  const matchedKeywords = detectedRoleConfig.matches;
+  const missingKeywordSuggestions = detectedRoleConfig.keywords.filter(keyword => !matchedKeywords.includes(keyword));
+  const atsScore = Math.round((matchedKeywords.length / Math.max(1, detectedRoleConfig.keywords.length)) * 100);
   const score = Math.min(
     96,
-    30
+    24
       + (hasEmail ? 5 : 0)
       + (hasPhone ? 4 : 0)
       + (hasSummary ? 8 : 0)
@@ -59,17 +79,18 @@ function localAnalyze(text) {
       + (hasExperience ? 10 : 0)
       + (hasEducation ? 7 : 0)
       + (hasMetrics ? 10 : 0)
-      + Math.min(10, matchedKeywords.length)
+      + Math.round(atsScore * 0.2)
       + Math.min(8, Math.floor(words.length / 80)),
   );
 
   return {
-    atsScore: score,
+    atsScore,
     overallScore: score,
     candidateName,
+    detectedRole: detectedRoleConfig.role,
     welcomeMessage: candidateName
-      ? `Welcome ${candidateName} to AFAI Resume IQ. Let's analyze your resume.`
-      : "Welcome to AFAI Resume IQ. Let's analyze your resume.",
+      ? `Welcome ${candidateName} to AFAI Resume IQ. Let's analyze your ${detectedRoleConfig.role} resume.`
+      : `Welcome to AFAI Resume IQ. Let's analyze your ${detectedRoleConfig.role} resume.`,
     skills,
     strengths: [
       skills.length >= 5 && `Detected role keywords: ${skills.slice(0, 6).join(', ')}.`,
@@ -82,31 +103,32 @@ function localAnalyze(text) {
       !hasProjects && 'Projects section is missing or too generic.',
       !hasExperience && 'Experience or internship details are not clear.',
       !hasMetrics && 'Achievements need numbers, scale, users, performance, or time saved.',
-      missingKeywordSuggestions.length && `Missing ATS keywords: ${missingKeywordSuggestions.slice(0, 6).join(', ')}.`,
+      missingKeywordSuggestions.length && `Missing ${detectedRoleConfig.role} ATS keywords: ${missingKeywordSuggestions.slice(0, 6).join(', ')}.`,
     ].filter(Boolean),
     improvements: [
-      !hasSummary && 'Add a 2-3 line summary naming your full-stack or AI developer focus and strongest technologies.',
-      !hasProjects && 'Add projects with stack, APIs, database, authentication, deployment, and measurable impact.',
+      !hasSummary && `Add a 2-3 line summary naming your ${detectedRoleConfig.role} focus and strongest tools.`,
+      !hasProjects && detectedRoleConfig.suggestions[0],
       !hasMetrics && 'Add quantified bullets such as "reduced latency by 30%" or "served 500+ users".',
       missingKeywordSuggestions.length && `Add truthful evidence for ${missingKeywordSuggestions.slice(0, 6).join(', ')}.`,
     ].filter(Boolean),
     actionableImprovements: [
-      !hasSummary && 'Add a concise summary targeted to full-stack or AI developer roles.',
-      'For each project, include problem, tech stack, API/database/auth details, deployment link, and result.',
+      !hasSummary && `Add a concise summary targeted to ${detectedRoleConfig.role} roles.`,
+      ...detectedRoleConfig.suggestions,
       !hasMetrics && 'Convert responsibilities into quantified achievements.',
     ].filter(Boolean),
     sectionAnalysis: [
       { section: 'Summary', score: hasSummary ? 78 : 35, status: hasSummary ? 'Developing' : 'Needs work', feedback: hasSummary ? 'Summary signal detected.' : 'No clear summary section detected.', recommendation: 'State target role, core stack, AI/full-stack focus, and one outcome.' },
-      { section: 'Skills', score: Math.min(95, skills.length * 12), status: skills.length >= 6 ? 'Strong' : 'Developing', feedback: skills.length ? `Detected ${skills.join(', ')}.` : 'No strong technical skills list detected.', recommendation: 'Group skills by frontend, backend, database, AI, tools, and deployment.' },
-      { section: 'Projects', score: hasProjects ? 72 : 30, status: hasProjects ? 'Developing' : 'Needs work', feedback: hasProjects ? 'Project evidence found.' : 'Project evidence is missing.', recommendation: 'Add React, Node.js, MongoDB, REST APIs, deployment, and measurable project impact.' },
+      { section: 'Skills', score: Math.min(95, skills.length * 12), status: skills.length >= 5 ? 'Strong' : 'Developing', feedback: skills.length ? `Detected ${skills.join(', ')}.` : 'No strong role-specific skills list detected.', recommendation: `Group skills around ${detectedRoleConfig.role} tools, methods, and outcomes.` },
+      { section: 'Projects', score: hasProjects ? 72 : 30, status: hasProjects ? 'Developing' : 'Needs work', feedback: hasProjects ? 'Project, portfolio, or campaign evidence found.' : 'Project, portfolio, or campaign evidence is missing.', recommendation: detectedRoleConfig.suggestions[0] },
       { section: 'Experience', score: hasExperience ? 70 : 35, status: hasExperience ? 'Developing' : 'Needs work', feedback: hasExperience ? 'Experience signal detected.' : 'No clear work or internship section detected.', recommendation: 'Use action verbs and show responsibilities, technologies, and outcomes.' },
       { section: 'Education', score: hasEducation ? 82 : 42, status: hasEducation ? 'Strong' : 'Needs work', feedback: hasEducation ? 'Education signal detected.' : 'Education details are thin or missing.', recommendation: 'Include degree, institution, graduation year, and relevant coursework if useful.' },
-      { section: 'ATS Optimization', score: Math.min(95, matchedKeywords.length * 9), status: matchedKeywords.length >= 7 ? 'Strong' : 'Developing', feedback: `Matched ${matchedKeywords.length}/${TARGET_KEYWORDS.length} target keywords.`, recommendation: `Add truthful evidence for ${missingKeywordSuggestions.slice(0, 8).join(', ') || 'role-specific keywords'}.` },
+      { section: 'ATS Optimization', score: atsScore, status: atsScore >= 75 ? 'Strong' : atsScore >= 45 ? 'Developing' : 'Needs work', feedback: `Matched ${matchedKeywords.length}/${detectedRoleConfig.keywords.length} ${detectedRoleConfig.role} keywords.`, recommendation: `Add truthful evidence for ${missingKeywordSuggestions.slice(0, 8).join(', ') || 'role-specific keywords'}.` },
       { section: 'Formatting', score: words.length >= 250 ? 78 : 48, status: words.length >= 250 ? 'Developing' : 'Needs work', feedback: `Resume text has ${words.length} words.`, recommendation: 'Use clear headings, concise bullets, and action-technology-impact structure.' },
     ],
     missingKeywordSuggestions,
-    recommendedRoles: [{ role: skills.includes('React') && skills.includes('Node.js') ? 'MERN Stack Developer' : 'Software Engineer', matchPercentage: Math.min(94, 58 + skills.length * 4), reason: 'Detected role fit from resume keywords, project signals, and ATS keyword coverage.', missingSkills: missingKeywordSuggestions.slice(0, 5), recommendedLearning: ['Build one deployed full-stack project', 'Add measurable project outcomes', 'Practice API and database design'] }],
-    bestCareerPath: skills.includes('React') && skills.includes('Node.js') ? 'MERN Stack Developer' : 'Software Engineer',
+    matchedRoleKeywords: matchedKeywords,
+    recommendedRoles: detectedRoleConfig.careers.map((role, index) => ({ role, matchPercentage: Math.max(45, Math.min(94, score - index * 7)), reason: `Detected ${detectedRoleConfig.role} fit from role keywords, experience signals, and ATS coverage.`, matchedSkills: matchedKeywords, missingSkills: missingKeywordSuggestions.slice(0, 5), recommendedLearning: detectedRoleConfig.suggestions })),
+    bestCareerPath: detectedRoleConfig.role,
     estimatedExperienceLevel: words.length > 180 ? 'Intermediate' : 'Beginner',
     nextTechnologiesToLearn: missingKeywordSuggestions.slice(0, 6),
     portfolioImprovements: ['Add live project links', 'Add measurable impact', 'Explain architecture trade-offs'],
@@ -166,14 +188,17 @@ export default function ResumeAnalyzer() {
   };
 
   const nestedAnalysis = analysis?.analysis || {};
-  const score = analysis?.atsScore || analysis?.overallScore || nestedAnalysis.atsScore || analysis?.score || 0;
+  const score = analysis?.overallScore || nestedAnalysis.overallScore || analysis?.atsScore || nestedAnalysis.atsScore || analysis?.score || 0;
+  const atsScore = analysis?.atsScore || nestedAnalysis.atsScore || 0;
   const candidateName = analysis?.candidateName || nestedAnalysis.candidateName || '';
+  const detectedRole = analysis?.detectedRole || nestedAnalysis.detectedRole || analysis?.bestCareerPath || nestedAnalysis.bestCareerPath || 'General Professional';
   const welcomeMessage = analysis?.welcomeMessage || nestedAnalysis.welcomeMessage || "Welcome to AFAI Resume IQ. Let's analyze your resume.";
   const skills = pickList(analysis?.skills, analysis?.extractedSkills, nestedAnalysis.extractedSkills);
   const strengths = pickList(analysis?.strengths, nestedAnalysis.strengthAreas);
   const weaknesses = pickList(analysis?.weaknesses, nestedAnalysis.weakAreas);
   const improvements = pickList(analysis?.actionableImprovements, analysis?.improvements, nestedAnalysis.actionableImprovements, nestedAnalysis.weakAreas);
   const missingKeywords = pickList(analysis?.missingKeywordSuggestions, nestedAnalysis.missingKeywordSuggestions);
+  const matchedKeywords = pickList(analysis?.matchedRoleKeywords, nestedAnalysis.matchedRoleKeywords);
   const sectionAnalysis = pickList(analysis?.sectionAnalysis, nestedAnalysis.sectionAnalysis);
 
   return (
@@ -231,6 +256,7 @@ export default function ResumeAnalyzer() {
                   <div className="min-w-0">
                     <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">Candidate</p>
                     <p className="mt-1 break-words text-lg font-black text-white">{candidateName || 'Name not detected'}</p>
+                    <p className="mt-1 text-xs font-black uppercase tracking-[0.14em] text-violet-200">Detected role: {detectedRole}</p>
                     <p className="mt-2 text-xs leading-5 text-slate-400">{welcomeMessage}</p>
                   </div>
                 </div>
@@ -242,6 +268,10 @@ export default function ResumeAnalyzer() {
                   </div>
                 </div>
                 <p className="mt-3 text-center text-xs font-black uppercase tracking-[0.18em] text-slate-500">Overall resume score</p>
+                <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.055] px-4 py-2 text-center">
+                  <p className="text-lg font-black text-white">{atsScore}<span className="text-xs text-slate-500">/100</span></p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Role ATS score</p>
+                </div>
               </div>
               <div>
                 <p className="font-black text-white text-sm sm:text-base">Detected Skills</p>
@@ -266,10 +296,18 @@ export default function ResumeAnalyzer() {
                 {!improvements.length && <p className="mt-2 text-xs text-slate-500">The resume is already covering the main improvement checks.</p>}
               </div>
               <div>
-                <p className="flex items-center gap-2 font-black text-white text-sm sm:text-base"><Target size={17} className="text-cyan-300" /> ATS Keyword Suggestions</p>
+                <p className="flex items-center gap-2 font-black text-white text-sm sm:text-base"><Target size={17} className="text-cyan-300" /> Role ATS Keywords</p>
+                {matchedKeywords.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-xs font-bold text-slate-500">Matched</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {matchedKeywords.map(keyword => <span key={keyword} className="rounded-full border border-emerald-200/20 bg-emerald-200/10 px-3 py-1 text-xs font-bold text-emerald-100">{keyword}</span>)}
+                    </div>
+                  </div>
+                )}
                 <div className="mt-2 flex flex-wrap gap-2">
                   {missingKeywords.map(keyword => <span key={keyword} className="rounded-full border border-amber-200/20 bg-amber-200/10 px-3 py-1 text-xs font-bold text-amber-100">{keyword}</span>)}
-                  {!missingKeywords.length && <span className="text-xs text-slate-500">Target full-stack and AI keywords are well covered.</span>}
+                  {!missingKeywords.length && <span className="text-xs text-slate-500">Detected role keywords are well covered.</span>}
                 </div>
               </div>
             </div>

@@ -1,92 +1,272 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-
-const SUPPORTED_ROLES = [
-  'Frontend Developer',
-  'Backend Developer',
-  'MERN Stack Developer',
-  'Full Stack Developer',
-  'AI/ML Engineer',
-  'Data Analyst',
-  'DevOps Engineer',
-  'Cloud Engineer',
-  'UI/UX Developer',
-  'Software Engineer',
+const ROLE_CONFIGS = [
+  {
+    role: 'Full Stack Developer',
+    family: 'software',
+    titles: ['full stack developer', 'fullstack developer', 'mern stack developer', 'web developer'],
+    keywords: ['React', 'Node.js', 'Express.js', 'MongoDB', 'REST API', 'Authentication', 'GitHub', 'Deployment', 'JavaScript', 'Database', 'JWT', 'Frontend', 'Backend'],
+    aliases: ['nodejs', 'express', 'restful api', 'api integration', 'auth', 'render', 'vercel', 'netlify'],
+    skills: ['React', 'Node.js', 'Express.js', 'MongoDB', 'JavaScript', 'TypeScript', 'REST API', 'JWT', 'Git', 'GitHub', 'Redux', 'Tailwind CSS', 'PostgreSQL', 'Docker'],
+    suggestions: [
+      'Add project architecture details covering frontend, backend, database, authentication, and deployment.',
+      'Include live deployment links and GitHub repositories for full-stack projects.',
+      'Quantify impact such as users served, API latency reduced, bugs fixed, or workflow time saved.',
+    ],
+    careers: ['Full Stack Developer', 'MERN Stack Developer', 'Frontend Developer', 'Backend Developer'],
+  },
+  {
+    role: 'Frontend Developer',
+    family: 'software',
+    titles: ['frontend developer', 'front end developer', 'react developer', 'ui developer'],
+    keywords: ['React', 'JavaScript', 'TypeScript', 'HTML', 'CSS', 'Responsive Design', 'Accessibility', 'Redux', 'Performance', 'UI Components'],
+    aliases: ['front-end', 'tailwind', 'vite', 'next.js', 'wcag'],
+    skills: ['React', 'JavaScript', 'TypeScript', 'HTML', 'CSS', 'Tailwind CSS', 'Redux', 'Next.js', 'Vite', 'Accessibility', 'Responsive Design'],
+    suggestions: [
+      'Show responsive UI work with accessibility, performance, and component architecture details.',
+      'Add links to deployed interfaces and explain measurable UX or performance improvements.',
+      'Group frontend skills by framework, styling, state management, testing, and tooling.',
+    ],
+    careers: ['Frontend Developer', 'React Developer', 'UI Developer', 'Full Stack Developer'],
+  },
+  {
+    role: 'Backend Developer',
+    family: 'software',
+    titles: ['backend developer', 'back end developer', 'api developer', 'server side developer'],
+    keywords: ['Node.js', 'Express.js', 'REST API', 'GraphQL', 'Database', 'MongoDB', 'PostgreSQL', 'Authentication', 'Microservices', 'Redis', 'Security'],
+    aliases: ['nodejs', 'express', 'api', 'jwt', 'server-side'],
+    skills: ['Node.js', 'Express.js', 'REST API', 'GraphQL', 'MongoDB', 'PostgreSQL', 'Redis', 'JWT', 'Microservices', 'Docker', 'Testing'],
+    suggestions: [
+      'Describe API contracts, database design, authentication flow, validation, and error handling.',
+      'Add performance or reliability metrics such as latency, throughput, uptime, or query improvements.',
+      'Mention security practices, tests, logging, and deployment environment where relevant.',
+    ],
+    careers: ['Backend Developer', 'API Developer', 'Software Engineer', 'Full Stack Developer'],
+  },
+  {
+    role: 'Software Engineer',
+    family: 'software',
+    titles: ['software engineer', 'software developer', 'programmer', 'application developer'],
+    keywords: ['Data Structures', 'Algorithms', 'Programming', 'System Design', 'Testing', 'Git', 'Database', 'API', 'Debugging', 'OOP'],
+    aliases: ['dsa', 'object oriented', 'unit testing'],
+    skills: ['JavaScript', 'Python', 'Java', 'C++', 'Git', 'SQL', 'Testing', 'System Design', 'Data Structures', 'Algorithms'],
+    suggestions: [
+      'Connect technical skills to concrete projects, code quality, testing, and system design decisions.',
+      'Add measurable engineering outcomes and scope, not only lists of languages.',
+      'Include GitHub or portfolio evidence when project code can be shared.',
+    ],
+    careers: ['Software Engineer', 'Application Developer', 'Backend Developer', 'Full Stack Developer'],
+  },
+  {
+    role: 'UX/UI Designer',
+    family: 'design',
+    titles: ['ux designer', 'ui designer', 'ux/ui designer', 'user experience designer', 'user interface designer'],
+    keywords: ['Figma', 'Wireframing', 'Prototyping', 'User Research', 'Usability Testing', 'Accessibility', 'Design Systems', 'Interaction Design', 'User Flow', 'Mobile Design'],
+    aliases: ['figma', 'adobe xd', 'sketch', 'persona', 'journey map', 'information architecture', 'wcag', 'user flows'],
+    skills: ['Figma', 'Adobe XD', 'Sketch', 'Wireframing', 'Prototyping', 'User Research', 'Usability Testing', 'Accessibility', 'Design Systems', 'Interaction Design', 'User Flow', 'Mobile Design'],
+    suggestions: [
+      'Add portfolio case study links that show problem, research, wireframes, prototype, testing, and final outcome.',
+      'Include research methodologies such as interviews, surveys, usability testing, or heuristic evaluation.',
+      'Show design impact with metrics like task completion, conversion, engagement, accessibility, or reduced support friction.',
+    ],
+    careers: ['UX/UI Designer', 'Product Designer', 'UX Researcher', 'Interaction Designer'],
+  },
+  {
+    role: 'Product Designer',
+    family: 'design',
+    titles: ['product designer', 'senior product designer', 'digital product designer'],
+    keywords: ['Product Strategy', 'Design Systems', 'User Research', 'Prototyping', 'Figma', 'User Journey', 'A/B Testing', 'Design Thinking', 'Usability Testing', 'Stakeholder Collaboration'],
+    aliases: ['roadmap', 'design sprint', 'journey map', 'ab testing', 'user flows'],
+    skills: ['Figma', 'Product Strategy', 'Design Systems', 'User Research', 'Prototyping', 'A/B Testing', 'Design Thinking', 'User Journey', 'Usability Testing'],
+    suggestions: [
+      'Frame case studies around product problem, constraints, decisions, trade-offs, and business result.',
+      'Mention collaboration with PMs, engineers, researchers, and stakeholders.',
+      'Add metrics tied to product outcomes such as activation, retention, conversion, or task success.',
+    ],
+    careers: ['Product Designer', 'UX/UI Designer', 'UX Researcher', 'Design Lead'],
+  },
+  {
+    role: 'UX Researcher',
+    family: 'design',
+    titles: ['ux researcher', 'user researcher', 'design researcher', 'user experience researcher'],
+    keywords: ['User Research', 'Usability Testing', 'User Interviews', 'Surveys', 'Personas', 'Journey Mapping', 'Research Synthesis', 'A/B Testing', 'Heuristic Evaluation', 'Accessibility'],
+    aliases: ['affinity mapping', 'user testing', 'research insights', 'mixed methods'],
+    skills: ['User Research', 'Usability Testing', 'User Interviews', 'Surveys', 'Personas', 'Journey Mapping', 'Research Synthesis', 'A/B Testing', 'Heuristic Evaluation'],
+    suggestions: [
+      'Add research case studies with objective, methodology, participant count, insights, recommendations, and product impact.',
+      'Mention research methods such as interviews, surveys, usability testing, heuristic evaluation, or journey mapping.',
+      'Quantify research influence with task success, conversion, satisfaction, adoption, or reduced friction.',
+    ],
+    careers: ['UX Researcher', 'UX/UI Designer', 'Product Designer'],
+  },
+  {
+    role: 'Graphic Designer',
+    family: 'design',
+    titles: ['graphic designer', 'visual designer', 'brand designer', 'creative designer'],
+    keywords: ['Adobe Photoshop', 'Adobe Illustrator', 'InDesign', 'Branding', 'Typography', 'Layout Design', 'Color Theory', 'Print Design', 'Social Media Creatives', 'Visual Identity'],
+    aliases: ['photoshop', 'illustrator', 'canva', 'adobe creative suite', 'brand identity'],
+    skills: ['Adobe Photoshop', 'Adobe Illustrator', 'InDesign', 'Canva', 'Branding', 'Typography', 'Layout Design', 'Color Theory', 'Print Design'],
+    suggestions: [
+      'Add portfolio links with campaign visuals, brand systems, before/after examples, and design rationale.',
+      'Mention tools, formats, industries, and production constraints handled.',
+      'Quantify creative impact such as engagement, click-through rate, campaign reach, or brand consistency improvements.',
+    ],
+    careers: ['Graphic Designer', 'Visual Designer', 'Brand Designer', 'Creative Designer'],
+  },
+  {
+    role: 'Data Analyst',
+    family: 'data',
+    titles: ['data analyst', 'business intelligence analyst', 'bi analyst', 'reporting analyst'],
+    keywords: ['SQL', 'Excel', 'Power BI', 'Tableau', 'Python', 'Data Visualization', 'Dashboard', 'ETL', 'Statistics', 'Reporting'],
+    aliases: ['powerbi', 'pivot table', 'pandas', 'numpy', 'analytics'],
+    skills: ['SQL', 'Excel', 'Power BI', 'Tableau', 'Python', 'Pandas', 'Data Visualization', 'Dashboarding', 'Statistics', 'ETL'],
+    suggestions: [
+      'Add analytics projects with business question, dataset size, SQL/Python methods, dashboard output, and decision impact.',
+      'Quantify reporting improvements, automation time saved, revenue insights, or forecast accuracy.',
+      'Mention dashboard links or screenshots when possible.',
+    ],
+    careers: ['Data Analyst', 'BI Analyst', 'Reporting Analyst', 'Business Analyst'],
+  },
+  {
+    role: 'AI/ML Engineer',
+    family: 'data',
+    titles: ['machine learning engineer', 'ai engineer', 'ml engineer', 'data scientist'],
+    keywords: ['Python', 'Machine Learning', 'Deep Learning', 'TensorFlow', 'PyTorch', 'NLP', 'Computer Vision', 'LLM', 'Model Deployment', 'MLOps'],
+    aliases: ['scikit-learn', 'sklearn', 'openai', 'gemini', 'rag', 'vector database'],
+    skills: ['Python', 'Machine Learning', 'TensorFlow', 'PyTorch', 'NLP', 'Computer Vision', 'LLM', 'MLOps', 'Pandas', 'NumPy', 'Scikit-learn'],
+    suggestions: [
+      'Add model metrics such as accuracy, F1, latency, dataset size, evaluation method, and deployment approach.',
+      'Separate experiments, production ML, LLM integration, and MLOps skills clearly.',
+      'Include GitHub notebooks, demos, or API deployment links where possible.',
+    ],
+    careers: ['AI/ML Engineer', 'Machine Learning Engineer', 'Data Scientist', 'AI Integration Engineer'],
+  },
+  {
+    role: 'DevOps Engineer',
+    family: 'infrastructure',
+    titles: ['devops engineer', 'site reliability engineer', 'sre', 'cloud devops engineer'],
+    keywords: ['Docker', 'Kubernetes', 'AWS', 'Azure', 'GCP', 'CI/CD', 'Terraform', 'Linux', 'Monitoring', 'Jenkins'],
+    aliases: ['github actions', 'gitlab ci', 'prometheus', 'grafana', 'iac'],
+    skills: ['Docker', 'Kubernetes', 'AWS', 'Azure', 'GCP', 'CI/CD', 'Terraform', 'Linux', 'Jenkins', 'Monitoring', 'Prometheus', 'Grafana'],
+    suggestions: [
+      'Describe infrastructure scope: cloud provider, CI/CD flow, containers, monitoring, and incident reduction.',
+      'Quantify deployment frequency, uptime, build-time reduction, cost savings, or recovery time improvements.',
+      'Mention infrastructure-as-code and security practices where used.',
+    ],
+    careers: ['DevOps Engineer', 'Cloud Engineer', 'Site Reliability Engineer', 'Platform Engineer'],
+  },
+  {
+    role: 'Digital Marketer',
+    family: 'marketing',
+    titles: ['digital marketer', 'marketing executive', 'seo specialist', 'performance marketer'],
+    keywords: ['SEO', 'Google Ads', 'Meta Ads', 'Content Marketing', 'Email Marketing', 'Analytics', 'Campaigns', 'Lead Generation', 'Conversion Rate', 'Social Media Marketing'],
+    aliases: ['sem', 'ppc', 'google analytics', 'ga4', 'facebook ads', 'instagram ads'],
+    skills: ['SEO', 'Google Ads', 'Meta Ads', 'Google Analytics', 'Content Marketing', 'Email Marketing', 'Lead Generation', 'Campaign Management', 'Social Media Marketing'],
+    suggestions: [
+      'Add campaign metrics such as ROAS, CAC, CTR, CPL, conversion rate, leads generated, or traffic growth.',
+      'Separate organic, paid, email, content, and analytics experience.',
+      'Mention tools like GA4, Search Console, Ads Manager, CRM, or marketing automation platforms.',
+    ],
+    careers: ['Digital Marketer', 'SEO Specialist', 'Performance Marketer', 'Marketing Executive'],
+  },
+  {
+    role: 'Business Analyst',
+    family: 'business',
+    titles: ['business analyst', 'ba', 'systems analyst', 'functional analyst'],
+    keywords: ['Requirements Gathering', 'Stakeholder Management', 'BRD', 'FRD', 'User Stories', 'Process Mapping', 'SQL', 'UAT', 'Agile', 'Business Process'],
+    aliases: ['jira', 'confluence', 'gap analysis', 'acceptance criteria'],
+    skills: ['Requirements Gathering', 'Stakeholder Management', 'User Stories', 'Process Mapping', 'SQL', 'UAT', 'Agile', 'Jira', 'Confluence'],
+    suggestions: [
+      'Add examples of requirements translated into user stories, workflows, acceptance criteria, and delivered outcomes.',
+      'Quantify process improvements, cost savings, cycle-time reduction, or stakeholder impact.',
+      'Mention domain knowledge, tools, and collaboration with product, engineering, QA, and business teams.',
+    ],
+    careers: ['Business Analyst', 'Product Analyst', 'Functional Analyst', 'Project Coordinator'],
+  },
+  {
+    role: 'Project Manager',
+    family: 'business',
+    titles: ['project manager', 'program manager', 'scrum master', 'delivery manager'],
+    keywords: ['Project Planning', 'Agile', 'Scrum', 'Risk Management', 'Budgeting', 'Stakeholder Management', 'Timeline', 'Delivery', 'Jira', 'Resource Management'],
+    aliases: ['kanban', 'pmp', 'sprint planning', 'roadmap'],
+    skills: ['Project Planning', 'Agile', 'Scrum', 'Risk Management', 'Budgeting', 'Stakeholder Management', 'Jira', 'Resource Management'],
+    suggestions: [
+      'Show project size, budget, team size, timelines, risks handled, and delivery outcomes.',
+      'Quantify on-time delivery, cost control, productivity, or process improvement.',
+      'Mention methodologies, tools, ceremonies, and stakeholder communication rhythm.',
+    ],
+    careers: ['Project Manager', 'Scrum Master', 'Program Manager', 'Delivery Manager'],
+  },
+  {
+    role: 'HR / Recruiter',
+    family: 'people',
+    titles: ['hr executive', 'recruiter', 'talent acquisition', 'human resources', 'hr recruiter'],
+    keywords: ['Recruitment', 'Talent Acquisition', 'Sourcing', 'Screening', 'Onboarding', 'HRMS', 'Employee Engagement', 'Interview Coordination', 'Payroll', 'Compliance'],
+    aliases: ['ats', 'linkedin recruiter', 'naukri', 'workday'],
+    skills: ['Recruitment', 'Talent Acquisition', 'Sourcing', 'Screening', 'Onboarding', 'HRMS', 'Employee Engagement', 'Interview Coordination'],
+    suggestions: [
+      'Add hiring metrics such as positions closed, time-to-fill, offer acceptance rate, or candidate pipeline size.',
+      'Mention sourcing channels, ATS tools, interview coordination, onboarding, and stakeholder collaboration.',
+      'Separate recruitment, HR operations, employee engagement, and compliance responsibilities.',
+    ],
+    careers: ['HR / Recruiter', 'Talent Acquisition Specialist', 'HR Executive', 'Recruitment Coordinator'],
+  },
+  {
+    role: 'Sales Executive',
+    family: 'sales',
+    titles: ['sales executive', 'business development executive', 'account executive', 'sales representative'],
+    keywords: ['Lead Generation', 'Cold Calling', 'CRM', 'Negotiation', 'Sales Pipeline', 'Revenue', 'Client Relationship', 'B2B Sales', 'Closing', 'Targets'],
+    aliases: ['salesforce', 'hubspot', 'prospecting', 'quota'],
+    skills: ['Lead Generation', 'Cold Calling', 'CRM', 'Negotiation', 'Sales Pipeline', 'Client Relationship', 'B2B Sales', 'Closing'],
+    suggestions: [
+      'Add sales metrics: revenue generated, quota attainment, deal size, conversion rate, meetings booked, or pipeline value.',
+      'Mention CRM tools, sales cycle ownership, industries, and customer segments.',
+      'Show negotiation, objection handling, relationship management, and retention outcomes.',
+    ],
+    careers: ['Sales Executive', 'Business Development Executive', 'Account Executive', 'Sales Representative'],
+  },
+  {
+    role: 'Content Writer',
+    family: 'content',
+    titles: ['content writer', 'copywriter', 'technical writer', 'seo writer'],
+    keywords: ['SEO Writing', 'Copywriting', 'Blog Writing', 'Content Strategy', 'Editing', 'Proofreading', 'WordPress', 'Keyword Research', 'Social Media Content', 'Technical Writing'],
+    aliases: ['cms', 'semrush', 'ahrefs', 'grammar', 'content calendar'],
+    skills: ['SEO Writing', 'Copywriting', 'Blog Writing', 'Content Strategy', 'Editing', 'Proofreading', 'WordPress', 'Keyword Research', 'Technical Writing'],
+    suggestions: [
+      'Add writing samples or portfolio links with topic, audience, format, and performance metrics.',
+      'Mention SEO tools, keyword research, editorial workflow, CMS, and content strategy.',
+      'Quantify traffic growth, ranking improvement, engagement, conversions, or publishing volume.',
+    ],
+    careers: ['Content Writer', 'Copywriter', 'SEO Writer', 'Technical Writer'],
+  },
+  {
+    role: 'Customer Support',
+    family: 'support',
+    titles: ['customer support', 'customer service', 'support executive', 'technical support'],
+    keywords: ['Customer Support', 'Ticketing', 'CRM', 'SLA', 'Troubleshooting', 'Live Chat', 'Email Support', 'Customer Satisfaction', 'Escalation', 'Knowledge Base'],
+    aliases: ['zendesk', 'freshdesk', 'intercom', 'csat', 'helpdesk'],
+    skills: ['Customer Support', 'Ticketing', 'CRM', 'SLA', 'Troubleshooting', 'Live Chat', 'Email Support', 'Escalation', 'Knowledge Base'],
+    suggestions: [
+      'Add support metrics such as CSAT, first response time, resolution time, ticket volume, or SLA adherence.',
+      'Mention tools, channels handled, escalation ownership, and knowledge base contributions.',
+      'Show customer empathy, troubleshooting process, and retention or quality improvements.',
+    ],
+    careers: ['Customer Support', 'Support Executive', 'Technical Support Specialist', 'Customer Success Associate'],
+  },
 ];
 
-const ROLE_PROFILES = {
-  'Frontend Developer': {
-    skills: ['react', 'javascript', 'typescript', 'html', 'css', 'tailwind', 'redux', 'vite', 'next.js', 'accessibility'],
-    roadmap: ['Deepen React rendering knowledge', 'Practice frontend performance profiling', 'Build accessible responsive dashboards'],
-    salaryTrend: 'Strong demand for React and product-focused frontend engineers.',
-  },
-  'Backend Developer': {
-    skills: ['node.js', 'express', 'api', 'rest', 'graphql', 'mongodb', 'postgresql', 'jwt', 'redis', 'microservices'],
-    roadmap: ['Build secure REST APIs', 'Learn Redis caching', 'Practice database indexing and query optimization'],
-    salaryTrend: 'Consistent demand for API, auth, and scalable service experience.',
-  },
-  'MERN Stack Developer': {
-    skills: ['mongodb', 'express', 'react', 'node.js', 'javascript', 'jwt', 'redux', 'tailwind', 'rest api'],
-    roadmap: ['Build a complete MERN SaaS project', 'Add JWT refresh-token auth', 'Deploy with Docker and CI/CD'],
-    salaryTrend: 'High portfolio value for startup and SaaS engineering roles.',
-  },
-  'Full Stack Developer': {
-    skills: ['react', 'node.js', 'database', 'api', 'auth', 'docker', 'cloud', 'testing', 'system design'],
-    roadmap: ['Practice end-to-end architecture', 'Add automated tests', 'Learn cloud deployment basics'],
-    salaryTrend: 'Broad hiring demand when frontend, backend, and deployment skills are visible.',
-  },
-  'AI/ML Engineer': {
-    skills: ['python', 'machine learning', 'pytorch', 'tensorflow', 'nlp', 'llm', 'pandas', 'numpy', 'scikit-learn', 'mlops'],
-    roadmap: ['Build model evaluation projects', 'Learn vector search and RAG', 'Deploy an ML API with monitoring'],
-    salaryTrend: 'Premium demand when ML skills are paired with production deployment.',
-  },
-  'Data Analyst': {
-    skills: ['sql', 'excel', 'python', 'pandas', 'power bi', 'tableau', 'statistics', 'dashboard', 'analytics'],
-    roadmap: ['Create SQL portfolio case studies', 'Build BI dashboards', 'Practice statistical storytelling'],
-    salaryTrend: 'Strong entry-to-mid demand for SQL and dashboard-heavy profiles.',
-  },
-  'DevOps Engineer': {
-    skills: ['docker', 'kubernetes', 'aws', 'azure', 'gcp', 'terraform', 'ci/cd', 'linux', 'monitoring', 'jenkins'],
-    roadmap: ['Containerize a full-stack app', 'Create a CI/CD pipeline', 'Learn Kubernetes deployment basics'],
-    salaryTrend: 'Strong demand for automation, cloud, and reliability skills.',
-  },
-  'Cloud Engineer': {
-    skills: ['aws', 'azure', 'gcp', 'terraform', 'cloudformation', 'docker', 'networking', 'iam', 'serverless'],
-    roadmap: ['Learn IAM and cloud networking', 'Deploy projects on AWS or Azure', 'Add Terraform infrastructure examples'],
-    salaryTrend: 'Growing demand for cloud migration and infrastructure automation.',
-  },
-  'UI/UX Developer': {
-    skills: ['figma', 'html', 'css', 'javascript', 'react', 'design system', 'accessibility', 'responsive design'],
-    roadmap: ['Document a design system', 'Improve accessibility skills', 'Build polished UI case studies'],
-    salaryTrend: 'Best fit where design implementation and frontend engineering overlap.',
-  },
-  'Software Engineer': {
-    skills: ['data structures', 'algorithms', 'javascript', 'python', 'java', 'database', 'testing', 'system design', 'git'],
-    roadmap: ['Practice DSA fundamentals', 'Strengthen testing habits', 'Build projects with clean architecture'],
-    salaryTrend: 'Broad demand across product engineering and platform teams.',
-  },
+const GENERAL_CONFIG = {
+  role: 'General Professional',
+  family: 'general',
+  titles: [],
+  keywords: ['Communication', 'Problem Solving', 'Collaboration', 'Leadership', 'Analysis', 'Operations', 'Planning', 'Reporting'],
+  aliases: [],
+  skills: ['Communication', 'Problem Solving', 'Collaboration', 'Leadership', 'Analysis', 'Planning', 'Reporting'],
+  suggestions: [
+    'Clarify the target role in the summary and align skills, experience, and achievements to that role.',
+    'Add measurable outcomes that show scope, quality, speed, revenue, customer impact, or process improvement.',
+    'Use clear section headings and evidence-rich bullets instead of broad responsibility statements.',
+  ],
+  careers: ['General Professional', 'Business Analyst', 'Project Coordinator'],
 };
-
-const CERTIFICATIONS = {
-  cloud: ['AWS Cloud Practitioner', 'Azure Fundamentals', 'Google Associate Cloud Engineer'],
-  devops: ['Docker Certified Associate', 'Certified Kubernetes Application Developer'],
-  data: ['Microsoft PL-300 Power BI Data Analyst', 'Google Data Analytics Certificate'],
-  ai: ['TensorFlow Developer Certificate', 'AWS Machine Learning Specialty'],
-  security: ['CompTIA Security+', 'ISC2 Certified in Cybersecurity'],
-};
-
-const TARGET_KEYWORDS = [
-  { label: 'React', terms: ['react'] },
-  { label: 'Node.js', terms: ['node.js', 'nodejs'] },
-  { label: 'Express.js', terms: ['express.js', 'express'] },
-  { label: 'MongoDB', terms: ['mongodb', 'mongo db'] },
-  { label: 'REST API', terms: ['rest api', 'restful api', 'api integration'] },
-  { label: 'Git', terms: ['git'] },
-  { label: 'GitHub', terms: ['github'] },
-  { label: 'Deployment', terms: ['deployment', 'deployed', 'render', 'vercel', 'netlify', 'aws', 'azure', 'gcp'] },
-  { label: 'Authentication', terms: ['authentication', 'auth', 'jwt', 'oauth', 'firebase auth'] },
-  { label: 'AI integration', terms: ['ai integration', 'artificial intelligence', 'llm', 'generative ai'] },
-  { label: 'OpenAI API / Gemini API', terms: ['openai api', 'gemini api', 'openai', 'gemini'] },
-];
 
 const SECTION_HEADINGS = [
   'summary',
@@ -95,69 +275,80 @@ const SECTION_HEADINGS = [
   'objective',
   'skills',
   'technical skills',
+  'core competencies',
+  'tools',
   'projects',
+  'portfolio',
+  'case studies',
   'experience',
   'work experience',
+  'employment',
   'internship',
   'internships',
   'education',
   'certifications',
   'achievements',
+  'accomplishments',
 ];
 
-function isUsableKey(key) {
-  return typeof key === 'string'
-    && key.trim().length > 20
-    && !/your_|replace|placeholder|example/i.test(key);
-}
-
-function getGeminiClient() {
-  if (!isUsableKey(process.env.GEMINI_API_KEY)) return null;
-  return new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-}
-
 function clamp(value, min = 0, max = 100) {
-  return Math.max(min, Math.min(max, Math.round(value)));
+  return Math.max(min, Math.min(max, Math.round(Number(value) || 0)));
 }
 
 function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function hasTerm(text, term) {
-  const normalized = term.replace(/\./g, '\\.?').replace(/\+/g, '\\+');
-  return new RegExp(`\\b${normalized}\\b`, 'i').test(text);
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function unique(items) {
-  return [...new Set(items.filter(Boolean))];
+  const seen = new Set();
+  return items.filter(item => {
+    const value = String(item || '').trim();
+    const key = value.toLowerCase();
+    if (!value || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
-function toTitleCaseName(value) {
+function titleCase(value) {
   return String(value || '')
     .trim()
     .replace(/\s+/g, ' ')
     .split(' ')
-    .map(part => part.length <= 2 && part === part.toUpperCase()
-      ? part
-      : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .map(part => (/^[A-Z]{2,}$/.test(part) ? part : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()))
     .join(' ');
 }
 
-function isLikelyName(line) {
-  const value = String(line || '').trim();
-  if (!value || value.length < 3 || value.length > 60) return false;
-  if (/@|https?:|www\.|\d|resume|curriculum|developer|engineer|email|phone|linkedin|github/i.test(value)) return false;
-  const words = value.split(/\s+/);
-  if (words.length < 2 || words.length > 4) return false;
-  return words.every(word => /^[A-Za-z][A-Za-z.'-]*$/.test(word));
+function termRegex(term) {
+  const escaped = escapeRegExp(term)
+    .replace(/\\\./g, '\\.?')
+    .replace(/\\\+/g, '\\+')
+    .replace(/\\\//g, '[\\s/-]?')
+    .replace(/\s+/g, '[\\s/-]+');
+  return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'i');
+}
+
+function hasTerm(text, term) {
+  return termRegex(term).test(String(text || ''));
+}
+
+function matchingTerms(text, terms) {
+  return unique(terms.filter(term => hasTerm(text, term)));
 }
 
 function isLikelyParsedName(value) {
   const normalized = String(value || '').trim();
   if (!normalized || normalized.length < 3 || normalized.length > 60) return false;
-  if (/@|https?:|www\.|\d|resume|curriculum|developer|engineer|email|phone|linkedin|github/i.test(normalized)) return false;
+  if (/@|https?:|www\.|\d|resume|curriculum|email|phone|linkedin|github/i.test(normalized)) return false;
   return normalized.split(/\s+/).every(word => /^[A-Za-z][A-Za-z.'-]*$/.test(word));
+}
+
+function isLikelyNameLine(line) {
+  const normalized = String(line || '').trim();
+  if (!isLikelyParsedName(normalized)) return false;
+  const words = normalized.split(/\s+/);
+  if (words.length < 2 || words.length > 4) return false;
+  return !ROLE_CONFIGS.some(config => config.titles.some(title => hasTerm(normalized, title)));
 }
 
 function extractCandidateName(resumeText, parsedData = {}) {
@@ -166,40 +357,29 @@ function extractCandidateName(resumeText, parsedData = {}) {
     || parsedData.name
     || parsedData.fullName;
 
-  if (isLikelyParsedName(parsedName)) {
-    return toTitleCaseName(parsedName);
-  }
+  if (isLikelyParsedName(parsedName)) return titleCase(parsedName);
 
-  const lines = String(resumeText || '')
+  const nameLine = String(resumeText || '')
     .split(/\r?\n/)
     .map(line => line.trim())
     .filter(Boolean)
-    .slice(0, 10);
+    .slice(0, 10)
+    .find(isLikelyNameLine);
 
-  const nameLine = lines.find(isLikelyName);
-  return nameLine ? toTitleCaseName(nameLine) : '';
-}
-
-function hasAnyTerm(text, terms) {
-  return terms.some(term => hasTerm(text, term));
+  return nameLine ? titleCase(nameLine) : '';
 }
 
 function getSectionText(text, headings) {
   const lines = String(text || '').split(/\r?\n/);
-  const normalizedTargets = headings.map(heading => heading.toLowerCase());
-  const allHeadings = new Set(SECTION_HEADINGS.map(heading => heading.toLowerCase()));
-
-  const startIndex = lines.findIndex(line => {
-    const normalized = line.trim().replace(/[:\-]+$/, '').toLowerCase();
-    return normalizedTargets.includes(normalized);
-  });
+  const targets = headings.map(heading => heading.toLowerCase());
+  const allHeadings = new Set(SECTION_HEADINGS);
+  const startIndex = lines.findIndex(line => targets.includes(line.trim().replace(/[:\-]+$/, '').toLowerCase()));
 
   if (startIndex === -1) return '';
 
   const endIndex = lines.findIndex((line, index) => {
     if (index <= startIndex) return false;
-    const normalized = line.trim().replace(/[:\-]+$/, '').toLowerCase();
-    return allHeadings.has(normalized);
+    return allHeadings.has(line.trim().replace(/[:\-]+$/, '').toLowerCase());
   });
 
   return lines.slice(startIndex + 1, endIndex === -1 ? lines.length : endIndex).join('\n').trim();
@@ -209,86 +389,106 @@ function detectSections(text) {
   const lower = String(text || '').toLowerCase();
   return {
     summary: /\b(summary|professional summary|profile|objective)\b/i.test(lower),
-    skills: /\b(skills|technical skills|technologies|tools)\b/i.test(lower),
-    projects: /\b(projects?|portfolio)\b/i.test(lower),
-    experience: /\b(experience|work experience|internship|employment)\b/i.test(lower),
-    education: /\b(education|degree|university|college|bachelor|master|b\.tech|m\.tech)\b/i.test(lower),
-    certifications: /\b(certifications?|certificates?|certified)\b/i.test(lower),
+    skills: /\b(skills|technical skills|core competencies|tools|technologies)\b/i.test(lower),
+    projects: /\b(projects?|portfolio|case studies|campaigns?)\b/i.test(lower),
+    experience: /\b(experience|work experience|employment|internship|professional experience)\b/i.test(lower),
+    education: /\b(education|degree|university|college|bachelor|master|b\.tech|m\.tech|mba)\b/i.test(lower),
+    certifications: /\b(certifications?|certificates?|certified|license)\b/i.test(lower),
+    achievements: /\b(achievements?|accomplishments?|awards?|impact)\b/i.test(lower),
   };
 }
 
-function buildSection(section, score, feedback, recommendation, evidence = '') {
-  const normalizedScore = clamp(score);
-  const status = normalizedScore >= 78 ? 'Strong' : normalizedScore >= 55 ? 'Developing' : 'Needs work';
-  return {
-    section,
-    score: normalizedScore,
-    status,
-    feedback,
-    recommendation,
-    evidence,
-  };
+function extractParsedSkills(parsedData = {}) {
+  const skills = parsedData.skills || {};
+  if (Array.isArray(skills)) return skills;
+
+  return [
+    ...(skills.technical || []),
+    ...(skills.soft || []),
+    ...(skills.languages || []),
+    ...(skills.tools || []),
+    ...(skills.frameworks || []),
+    ...(skills.databases || []),
+    ...(skills.platforms || []),
+    ...(parsedData.tools || []),
+    ...(parsedData.certifications || []),
+  ];
 }
 
-function extractResumeSignals(resumeText, parsedData = {}) {
+function buildVocabulary() {
+  return unique(ROLE_CONFIGS.flatMap(config => [
+    ...config.keywords,
+    ...config.aliases,
+    ...config.skills,
+  ]));
+}
+
+function detectRoleScores(text) {
+  const lower = String(text || '').toLowerCase();
+
+  return ROLE_CONFIGS.map(config => {
+    const titleMatches = matchingTerms(lower, config.titles);
+    const keywordMatches = matchingTerms(lower, config.keywords);
+    const aliasMatches = matchingTerms(lower, config.aliases);
+    const skillMatches = matchingTerms(lower, config.skills);
+    const score = titleMatches.length * 8
+      + keywordMatches.length * 4
+      + skillMatches.length * 3
+      + aliasMatches.length * 2;
+
+    return {
+      role: config.role,
+      config,
+      score,
+      titleMatches,
+      keywordMatches,
+      aliasMatches,
+      skillMatches,
+      evidence: unique([...titleMatches, ...keywordMatches, ...skillMatches, ...aliasMatches]),
+    };
+  }).sort((a, b) => b.score - a.score);
+}
+
+function extractSignals(resumeText, parsedData = {}) {
   const text = String(resumeText || '');
   const lower = text.toLowerCase();
-  const parsedSkills = parsedData.skills || {};
-  const skillsFromParsed = [
-    ...(Array.isArray(parsedSkills) ? parsedSkills : []),
-    ...(parsedSkills.technical || []),
-    ...(parsedSkills.frameworks || []),
-    ...(parsedSkills.databases || []),
-    ...(parsedSkills.tools || []),
-    ...(parsedSkills.platforms || []),
-    ...(parsedSkills.languages || []),
-  ];
-  const knownTerms = unique(Object.values(ROLE_PROFILES).flatMap(profile => profile.skills));
-  const extractedSkills = unique([
-    ...skillsFromParsed.map(skill => String(skill).trim()),
-    ...knownTerms.filter(term => hasTerm(lower, term)),
-  ]);
-
-  const projectCount = (lower.match(/\b(projects?|built|developed|implemented|created|designed)\b/g) || []).length;
-  const hasMetrics = /\b\d+%|\b\d+\s*percent|\b\d+x|\b\d+\+|\b(increased|reduced|improved|optimized)\b/i.test(text);
-  const educationSignals = unique([
-    /bachelor|b\.tech|bsc|bs\b/i.test(text) && 'Bachelor degree',
-    /master|m\.tech|msc|ms\b/i.test(text) && 'Master degree',
-    /phd|doctorate/i.test(text) && 'PhD',
-    /certified|certification|certificate/i.test(text) && 'Certification',
-  ]);
-  const yearsMatch = lower.match(/(\d+)\+?\s*(?:years|yrs)/);
-  const yearsOfExperience = Number(parsedData.yearsOfExperience ?? yearsMatch?.[1] ?? 0);
+  const parsedSkills = extractParsedSkills(parsedData);
+  const vocabulary = buildVocabulary();
+  const detectedFromVocabulary = vocabulary.filter(term => hasTerm(lower, term));
+  const allSkills = unique([...parsedSkills, ...detectedFromVocabulary]).map(skill => {
+    const canonical = ROLE_CONFIGS.flatMap(config => [...config.keywords, ...config.skills])
+      .find(term => term.toLowerCase() === String(skill).toLowerCase());
+    return canonical || titleCase(skill);
+  });
+  const roleScores = detectRoleScores(text);
+  const topRole = roleScores[0]?.score > 0 ? roleScores[0] : { config: GENERAL_CONFIG, role: GENERAL_CONFIG.role, score: 0, evidence: [] };
   const sections = detectSections(text);
   const summaryText = parsedData.summary || getSectionText(text, ['summary', 'professional summary', 'profile', 'objective']);
-  const projectText = getSectionText(text, ['projects', 'project', 'portfolio']);
-  const experienceText = getSectionText(text, ['experience', 'work experience', 'internship', 'internships', 'employment']);
+  const projectText = getSectionText(text, ['projects', 'project', 'portfolio', 'case studies', 'campaigns']);
+  const experienceText = getSectionText(text, ['experience', 'work experience', 'employment', 'internship', 'professional experience']);
   const educationText = getSectionText(text, ['education']);
   const certificationText = getSectionText(text, ['certifications', 'certification', 'certificates']);
-  const emailPresent = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(text);
-  const phonePresent = /(?:\+?\d[\d\s().-]{7,}\d)/.test(text);
-  const linkedinPresent = /linkedin\.com|linkedin/i.test(text);
-  const githubPresent = /github\.com|github/i.test(text);
-  const portfolioPresent = /https?:\/\/|www\.|portfolio|vercel|netlify|render/i.test(text);
-  const quantifiedMatches = text.match(/\b\d+(?:\.\d+)?\s*(?:%|percent|x|\+|users?|clients?|projects?|apis?|seconds?|minutes?|hours?|days?|requests?|records?)/gi) || [];
-  const impactVerbPresent = /\b(increased|reduced|improved|optimized|automated|deployed|launched|scaled|saved|built|integrated|migrated)\b/i.test(text);
+  const contact = {
+    email: /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(text),
+    phone: /(?:\+?\d[\d\s().-]{7,}\d)/.test(text),
+    linkedin: /linkedin\.com|linkedin/i.test(text),
+    github: /github\.com|github/i.test(text),
+    portfolio: /https?:\/\/|www\.|portfolio|behance|dribbble|medium|notion|figma\.com|tableau\.com|github/i.test(text),
+  };
+  const quantifiedMatches = text.match(/\b\d+(?:\.\d+)?\s*(?:%|percent|x|\+|users?|clients?|customers?|projects?|campaigns?|tickets?|leads?|revenue|sales|hours?|days?|requests?|records?|dashboards?|interviews?|hires?)/gi) || [];
+  const impactVerbPresent = /\b(increased|reduced|improved|optimized|automated|launched|scaled|saved|delivered|designed|researched|analyzed|managed|generated|resolved|closed|converted|hired|published)\b/i.test(text);
   const bulletCount = (text.match(/^\s*[-*]\s+/gm) || []).length;
-  const longSentenceCount = text
-    .split(/[.!?]\s+/)
-    .filter(sentence => sentence.trim().split(/\s+/).length > 45)
-    .length;
-  const targetKeywordMatches = TARGET_KEYWORDS.filter(keyword => hasAnyTerm(lower, keyword.terms)).map(keyword => keyword.label);
-  const missingTargetKeywords = TARGET_KEYWORDS.filter(keyword => !targetKeywordMatches.includes(keyword.label)).map(keyword => keyword.label);
+  const wordCount = text.split(/\s+/).filter(Boolean).length;
+  const yearsOfExperience = Number(parsedData.yearsOfExperience ?? lower.match(/(\d+)\+?\s*(?:years|yrs)/)?.[1] ?? 0);
 
   return {
     text,
     lower,
-    skills: extractedSkills,
-    projectCount,
-    hasMetrics,
-    educationSignals,
-    yearsOfExperience,
-    wordCount: text.split(/\s+/).filter(Boolean).length,
+    skills: allSkills,
+    roleScores,
+    detectedRole: topRole.config.role,
+    roleConfig: topRole.config,
+    roleEvidence: topRole.evidence,
     candidateName: extractCandidateName(text, parsedData),
     sections,
     summaryText,
@@ -296,498 +496,307 @@ function extractResumeSignals(resumeText, parsedData = {}) {
     experienceText,
     educationText,
     certificationText,
-    emailPresent,
-    phonePresent,
-    linkedinPresent,
-    githubPresent,
-    portfolioPresent,
+    contact,
     quantifiedMatches,
     impactVerbPresent,
     bulletCount,
-    longSentenceCount,
-    targetKeywordMatches,
-    missingTargetKeywords,
+    wordCount,
+    yearsOfExperience,
   };
 }
 
-function estimateExperienceLevel(yearsOfExperience, skillsCount, projectCount) {
-  const maturityScore = yearsOfExperience * 14 + skillsCount * 2 + projectCount * 3;
-  if (maturityScore >= 95) return 'Advanced';
-  if (maturityScore >= 50) return 'Intermediate';
-  return 'Beginner';
-}
-
-function scoreRole(profile, signals) {
-  const matchedSkills = profile.skills.filter(skill => {
-    const skillRegex = new RegExp(`\\b${escapeRegExp(skill).replace(/\\\./g, '\\.?')}\\b`, 'i');
-    return signals.skills.some(candidateSkill => skillRegex.test(candidateSkill)) || skillRegex.test(signals.lower);
-  });
-  const missingSkills = profile.skills.filter(skill => !matchedSkills.includes(skill));
-  const requiredSkillWindow = Math.min(profile.skills.length, 6);
-  const skillScore = Math.min(70, (matchedSkills.length / requiredSkillWindow) * 70);
-  const experienceScore = Math.min(15, signals.yearsOfExperience * 3);
-  const projectScore = Math.min(10, signals.projectCount * 2);
-  const metricScore = signals.hasMetrics ? 5 : 0;
-  const coreDepthBonus = matchedSkills.length >= 5 ? 8 : matchedSkills.length >= 4 ? 4 : 0;
-
+function roleKeywordMatches(signals, config) {
+  const terms = unique([...config.keywords, ...config.aliases]);
+  const matched = config.keywords.filter(keyword => hasTerm(signals.lower, keyword)
+    || config.aliases.some(alias => alias.toLowerCase().includes(keyword.toLowerCase()) && hasTerm(signals.lower, alias)));
+  const aliasMatched = config.aliases.filter(alias => hasTerm(signals.lower, alias));
   return {
-    matchedSkills,
-    missingSkills,
-    matchPercentage: clamp(skillScore + experienceScore + projectScore + metricScore + coreDepthBonus, 18, 98),
+    matchedKeywords: unique([...matched, ...aliasMatched.map(alias => {
+      const canonical = config.keywords.find(keyword => hasTerm(alias, keyword) || alias.toLowerCase().includes(keyword.toLowerCase()));
+      return canonical || titleCase(alias);
+    })]),
+    missingKeywords: config.keywords.filter(keyword => !terms.some(term => hasTerm(signals.lower, term) && (term === keyword || keyword.toLowerCase().includes(term.toLowerCase()) || term.toLowerCase().includes(keyword.toLowerCase())))),
   };
 }
 
-function buildReason(role, matchedSkills, signals) {
-  if (matchedSkills.length >= 3) {
-    return `Strong fit because the resume shows ${matchedSkills.slice(0, 5).join(', ')} with relevant project or experience signals.`;
-  }
-  if (signals.projectCount > 1) {
-    return `Potential fit because project work is visible, but more role-specific keywords are needed for stronger ATS alignment.`;
-  }
-  return `Possible fit based on transferable software fundamentals, but the resume should add more direct ${role} evidence.`;
+function sectionScore(present, evidenceScore = 0, baseWhenPresent = 58, baseWhenMissing = 28) {
+  return clamp((present ? baseWhenPresent : baseWhenMissing) + evidenceScore);
 }
 
-function roadmapForRole(role, missingSkills, profile) {
-  return unique([
-    ...missingSkills.slice(0, 2).map(skill => `Learn ${skill} fundamentals`),
-    ...profile.roadmap.slice(0, 3),
-  ]).slice(0, 5);
+function buildSection(section, score, feedback, recommendation, evidence = '') {
+  const normalized = clamp(score);
+  return {
+    section,
+    score: normalized,
+    status: normalized >= 78 ? 'Strong' : normalized >= 55 ? 'Developing' : 'Needs work',
+    feedback,
+    recommendation,
+    evidence,
+  };
 }
 
-function inferCertifications(topRoles) {
-  const joined = topRoles.map(role => role.role).join(' ').toLowerCase();
-  if (/cloud/.test(joined)) return CERTIFICATIONS.cloud;
-  if (/devops/.test(joined)) return CERTIFICATIONS.devops;
-  if (/data/.test(joined)) return CERTIFICATIONS.data;
-  if (/ai|ml/.test(joined)) return CERTIFICATIONS.ai;
-  return ['freeCodeCamp Full Stack Developer', 'Meta Front-End Developer Certificate', 'MongoDB Associate Developer'];
-}
-
-function deterministicRoleRecommendations(resumeText, parsedData = {}) {
-  const signals = extractResumeSignals(resumeText, parsedData);
-  const contactScore = clamp(
-    (signals.emailPresent ? 3 : 0)
-      + (signals.phonePresent ? 3 : 0)
-      + (signals.linkedinPresent ? 2 : 0)
-      + ((signals.githubPresent || signals.portfolioPresent) ? 2 : 0),
-    0,
-    10,
-  );
+function analyzeSections(signals, keywordData) {
+  const config = signals.roleConfig;
   const summaryWords = signals.summaryText.split(/\s+/).filter(Boolean).length;
-  const summaryScore = clamp(
-    signals.summaryText
-      ? 4
-        + (summaryWords >= 25 ? 3 : summaryWords >= 12 ? 1 : 0)
-        + (signals.targetKeywordMatches.length ? 2 : 0)
-        + (signals.impactVerbPresent ? 1 : 0)
-      : 2,
-    0,
-    10,
+  const roleSkillMatches = config.skills.filter(skill => hasTerm(signals.lower, skill));
+  const skillsScore = clamp(Math.min(100, 32 + roleSkillMatches.length * 8 + keywordData.matchedKeywords.length * 4));
+  const projectsExperienceScore = sectionScore(
+    signals.sections.projects || signals.sections.experience,
+    Math.min(24, signals.quantifiedMatches.length * 5)
+      + Math.min(12, roleSkillMatches.length * 2)
+      + (signals.impactVerbPresent ? 8 : 0),
   );
-  const skillsScore = clamp(
-    Math.min(15, signals.skills.length * 1.4 + signals.targetKeywordMatches.length * 0.9),
-    0,
-    15,
-  );
-  const projectTechMentions = ROLE_PROFILES['MERN Stack Developer'].skills
-    .filter(skill => hasTerm(signals.projectText.toLowerCase(), skill)).length;
-  const projectsScore = clamp(
-    (signals.sections.projects || signals.projectCount > 0 ? 4 : 1)
-      + Math.min(4, signals.projectCount)
-      + Math.min(3, projectTechMentions)
-      + (signals.quantifiedMatches.length ? 1 : 0),
-    0,
-    12,
-  );
-  const experienceScore = clamp(
-    (signals.sections.experience || signals.yearsOfExperience > 0 ? 5 : 2)
-      + Math.min(4, signals.yearsOfExperience)
-      + (/intern|developer|engineer|worked|company|organization/i.test(signals.experienceText || signals.text) ? 2 : 0)
-      + (signals.quantifiedMatches.length && signals.sections.experience ? 1 : 0),
-    0,
-    12,
-  );
-  const educationScore = clamp(
-    signals.educationSignals.length || signals.sections.education || signals.educationText
-      ? 6 + Math.min(2, signals.educationSignals.length)
-      : 2,
-    0,
-    8,
-  );
-  const certificationScore = clamp(
-    signals.sections.certifications || signals.certificationText || /certified|certificate/i.test(signals.text) ? 5 : 1,
-    0,
-    5,
-  );
-  const quantifiedScore = clamp(
-    Math.min(8, signals.quantifiedMatches.length * 2.5) + (signals.impactVerbPresent ? 2 : 0),
-    0,
-    10,
-  );
-  const keywordScore = clamp((signals.targetKeywordMatches.length / TARGET_KEYWORDS.length) * 10, 0, 10);
-  const clarityScore = clamp(
-    4 - Math.min(2, signals.longSentenceCount) - (/ {3,}|\t{2,}/.test(signals.text) ? 1 : 0),
-    1,
-    4,
-  );
+  const atsScore = clamp((keywordData.matchedKeywords.length / Math.max(1, config.keywords.length)) * 100);
   const structureScore = clamp(
-    (Object.values(signals.sections).filter(Boolean).length >= 5 ? 2 : 0)
-      + (signals.bulletCount >= 4 ? 1 : 0)
-      + (signals.wordCount >= 250 && signals.wordCount <= 900 ? 1 : 0),
-    0,
-    4,
+    25
+      + Object.values(signals.sections).filter(Boolean).length * 8
+      + (signals.bulletCount >= 4 ? 12 : 0)
+      + (signals.wordCount >= 220 && signals.wordCount <= 950 ? 15 : 0)
+      + (signals.contact.email ? 8 : 0)
+      + (signals.contact.phone || signals.contact.linkedin || signals.contact.portfolio ? 8 : 0),
   );
-  const scoreBreakdown = {
-    contactInformation: contactScore,
-    professionalSummary: summaryScore,
-    skillsSection: skillsScore,
-    projectDetails: projectsScore,
-    experience: experienceScore,
-    education: educationScore,
-    certifications: certificationScore,
-    quantifiedAchievements: quantifiedScore,
-    atsKeywordMatch: keywordScore,
-    grammarClarity: clarityScore,
-    lengthStructure: structureScore,
-  };
-  const atsScore = clamp(Object.values(scoreBreakdown).reduce((total, score) => total + score, 0), 25, 98);
-  const recommendedRoles = SUPPORTED_ROLES.map(role => {
-    const profile = ROLE_PROFILES[role];
-    const roleScore = scoreRole(profile, signals);
-    const missingSkills = roleScore.missingSkills.slice(0, 5).map(skill => skill.toUpperCase() === skill ? skill : skill.replace(/\b\w/g, char => char.toUpperCase()));
-    const matchedSkills = roleScore.matchedSkills.map(skill => skill.replace(/\b\w/g, char => char.toUpperCase()));
-
-    return {
-      role,
-      matchPercentage: roleScore.matchPercentage,
-      reason: buildReason(role, matchedSkills, signals),
-      matchedSkills,
-      missingSkills,
-      salaryTrend: profile.salaryTrend,
-      recommendedLearning: roadmapForRole(role, missingSkills, profile),
-    };
-  })
-    .sort((a, b) => b.matchPercentage - a.matchPercentage)
-    .slice(0, 5);
-
-  const strengths = unique([
-    contactScore >= 8 && 'Contact details are easy to find, including email plus professional links or phone.',
-    signals.targetKeywordMatches.length >= 6 && `Strong ATS keyword coverage for ${signals.targetKeywordMatches.slice(0, 5).join(', ')}.`,
-    signals.projectCount >= 2 && 'Project work is visible and gives recruiters concrete engineering evidence.',
-    signals.quantifiedMatches.length > 0 && 'The resume includes measurable impact signals instead of only responsibilities.',
-    educationScore >= 6 && 'Education information is present and supports the candidate profile.',
-  ]);
-
-  const weaknesses = unique([
-    contactScore < 7 && 'Contact section is incomplete; recruiters may not see enough direct reach-out links.',
-    summaryScore < 6 && 'Professional summary is missing or too generic for full-stack and AI developer roles.',
-    projectsScore < 7 && 'Projects need stronger stack, feature, API, deployment, and impact details.',
-    experienceScore < 7 && 'Experience or internship section needs clearer responsibilities and outcomes.',
-    quantifiedScore < 6 && 'Achievements are not quantified with numbers, scale, users, performance, or time saved.',
-    keywordScore < 6 && `Missing ATS keywords: ${signals.missingTargetKeywords.slice(0, 6).join(', ')}.`,
-  ]);
+  const educationScore = sectionScore(
+    signals.sections.education || Boolean(signals.educationText),
+    signals.sections.certifications || signals.certificationText ? 12 : 0,
+    74,
+    42,
+  );
+  const achievementScore = clamp(
+    28
+      + Math.min(45, signals.quantifiedMatches.length * 15)
+      + (signals.impactVerbPresent ? 18 : 0)
+      + (signals.sections.achievements ? 9 : 0),
+  );
+  const summaryScore = sectionScore(
+    Boolean(signals.summaryText),
+    (summaryWords >= 25 ? 18 : summaryWords >= 12 ? 8 : 0) + (signals.roleEvidence.length ? 8 : 0),
+  );
 
   const sectionAnalysis = [
     buildSection(
       'Summary',
-      summaryScore * 10,
+      summaryScore,
       signals.summaryText
-        ? `Summary detected with ${summaryWords} words. It ${summaryWords >= 25 ? 'has enough room to position the candidate' : 'is short and should sell the target role more clearly'}.`
+        ? `Summary detected with ${summaryWords} words and ${signals.detectedRole} positioning signals.`
         : 'No dedicated professional summary was detected.',
       signals.summaryText
-        ? 'Mention your target role, strongest stack, AI/full-stack focus, and one measurable achievement in 2-3 lines.'
-        : 'Add a 2-3 line summary naming full-stack or AI developer focus, strongest technologies, and one outcome.',
-      signals.summaryText.slice(0, 160),
+        ? `Sharpen the summary around ${signals.detectedRole}, strongest tools, domain context, and one measurable outcome.`
+        : `Add a 2-3 line summary naming the target ${signals.detectedRole} role, strongest tools, and one proof point.`,
+      signals.summaryText.slice(0, 180),
     ),
     buildSection(
       'Skills',
-      Math.round((skillsScore / 15) * 100),
-      signals.skills.length
-        ? `Detected ${signals.skills.slice(0, 8).join(', ')}.`
-        : 'No strong technical skills list was detected.',
-      signals.missingTargetKeywords.length
-        ? `Add missing role keywords such as ${signals.missingTargetKeywords.slice(0, 6).join(', ')} where they are truthful.`
-        : 'Keep the skills section grouped by frontend, backend, database, AI, tools, and deployment.',
-      signals.targetKeywordMatches.join(', '),
+      skillsScore,
+      roleSkillMatches.length
+        ? `Detected role-relevant skills: ${roleSkillMatches.slice(0, 10).join(', ')}.`
+        : `Few direct ${signals.detectedRole} skills were detected.`,
+      keywordData.missingKeywords.length
+        ? `Add truthful skills or evidence for ${keywordData.missingKeywords.slice(0, 6).join(', ')} if you have them.`
+        : 'Skill coverage is aligned with the detected role; keep grouping tools and competencies clearly.',
+      roleSkillMatches.join(', '),
     ),
     buildSection(
-      'Projects',
-      Math.round((projectsScore / 12) * 100),
-      signals.projectText
-        ? `Projects section detected. ${projectTechMentions ? 'Technologies are mentioned, but outcomes can be sharper.' : 'Technologies used are not clear enough.'}`
-        : 'Projects section is missing or too difficult to detect from the resume text.',
-      projectTechMentions
-        ? 'For each project, add problem, tech stack, API/database/auth details, deployment link, and measurable impact.'
-        : 'Your projects section does not mention technologies used. Add React, Node.js, MongoDB, APIs, deployment, and measurable impact.',
-      signals.projectText.slice(0, 160),
-    ),
-    buildSection(
-      'Experience',
-      Math.round((experienceScore / 12) * 100),
-      signals.sections.experience || signals.yearsOfExperience
-        ? `Experience signal detected${signals.yearsOfExperience ? ` with ${signals.yearsOfExperience}+ years referenced` : ''}.`
-        : 'No clear work experience or internship section was detected.',
-      'Use action verbs and add measurable responsibilities: built APIs, integrated auth, improved performance, handled users, or deployed features.',
-      signals.experienceText.slice(0, 160),
-    ),
-    buildSection(
-      'Education',
-      Math.round((educationScore / 8) * 100),
-      educationScore >= 6
-        ? `Education signal detected: ${signals.educationSignals.join(', ') || 'degree or institution details found'}.`
-        : 'Education details are thin or missing.',
-      'Include degree, institution, graduation year, CGPA if strong, and relevant coursework only when useful.',
-      signals.educationText.slice(0, 160),
+      'Projects / Experience',
+      projectsExperienceScore,
+      signals.projectText || signals.experienceText
+        ? `Found ${signals.sections.projects ? 'project/portfolio' : 'experience'} evidence for this profile.`
+        : 'Project, portfolio, campaign, or work evidence is hard to identify.',
+      config.family === 'design'
+        ? 'Show case studies from research to prototype to testing, with portfolio links and design impact.'
+        : config.family === 'data'
+          ? 'Show datasets, methods, dashboards/models, business question, and decision impact.'
+          : config.family === 'marketing'
+            ? 'Show campaigns, channels, budgets if shareable, audience, and performance metrics.'
+            : config.family === 'sales'
+              ? 'Show pipeline, targets, revenue, conversion, CRM usage, and customer segments.'
+              : 'Use action-result bullets that show scope, tools, process, and measurable impact.',
+      (signals.projectText || signals.experienceText).slice(0, 180),
     ),
     buildSection(
       'ATS Optimization',
-      keywordScore * 10,
-      signals.targetKeywordMatches.length
-        ? `Matched ${signals.targetKeywordMatches.length}/${TARGET_KEYWORDS.length} target full-stack/AI keywords.`
-        : 'The resume does not contain the expected full-stack or AI developer keywords.',
-      signals.missingTargetKeywords.length
-        ? `Add truthful evidence for ${signals.missingTargetKeywords.slice(0, 8).join(', ')}.`
-        : 'Keyword coverage is strong; keep matching keywords to actual project evidence.',
-      signals.targetKeywordMatches.join(', '),
+      atsScore,
+      `Matched ${keywordData.matchedKeywords.length}/${config.keywords.length} ${signals.detectedRole} ATS keywords.`,
+      keywordData.missingKeywords.length
+        ? `Prioritize role-specific keywords: ${keywordData.missingKeywords.slice(0, 8).join(', ')}.`
+        : 'Role-specific ATS keyword coverage is strong.',
+      keywordData.matchedKeywords.join(', '),
     ),
     buildSection(
-      'Formatting',
-      Math.round(((clarityScore + structureScore) / 8) * 100),
-      `Resume has ${signals.wordCount} words, ${signals.bulletCount} bullet lines, and ${Object.values(signals.sections).filter(Boolean).length} detected sections.`,
-      signals.wordCount < 250
-        ? 'Expand the resume with concise bullets under projects and experience; one-page resumes still need enough evidence.'
-        : 'Keep headings consistent, prefer bullets over paragraphs, and keep each bullet focused on action, technology, and outcome.',
+      'Resume Structure',
+      structureScore,
+      `Detected ${Object.values(signals.sections).filter(Boolean).length} sections, ${signals.bulletCount} bullet lines, and ${signals.wordCount} words.`,
+      'Use consistent headings, concise bullets, contact links, and a clear action-context-impact pattern.',
       '',
+    ),
+    buildSection(
+      'Education',
+      educationScore,
+      educationScore >= 70 ? 'Education or certification information is visible.' : 'Education details are thin or missing.',
+      'Include degree, institution, dates, relevant coursework, certifications, or training only when useful for the target role.',
+      signals.educationText.slice(0, 180),
+    ),
+    buildSection(
+      'Achievements / Impact',
+      achievementScore,
+      signals.quantifiedMatches.length
+        ? `Detected quantified evidence: ${signals.quantifiedMatches.slice(0, 4).join(', ')}.`
+        : 'Quantified achievements are limited or missing.',
+      'Add measurable proof: percentages, volume, time saved, revenue, customer impact, quality, hiring, delivery, or satisfaction metrics.',
+      signals.quantifiedMatches.join(', '),
     ),
   ];
 
-  const actionableImprovements = unique([
-    ...sectionAnalysis
-      .filter(section => section.score < 75)
-      .map(section => section.recommendation),
-    signals.quantifiedMatches.length < 2 && 'Add at least 3 quantified bullets, such as "reduced API latency by 30%" or "served 500+ users".',
-    signals.githubPresent ? '' : 'Add a GitHub profile or repository links for projects that can be reviewed.',
-    signals.portfolioPresent ? '' : 'Add live deployment links for the strongest full-stack projects.',
-  ]).slice(0, 8);
+  const overallScore = clamp(
+    skillsScore * 0.20
+      + projectsExperienceScore * 0.25
+      + atsScore * 0.20
+      + structureScore * 0.15
+      + educationScore * 0.10
+      + achievementScore * 0.10,
+  );
 
-  const bestCareerPath = recommendedRoles[0]?.role || 'Software Engineer';
+  return {
+    sectionAnalysis,
+    atsScore,
+    overallScore,
+    scoreBreakdown: {
+      skills: skillsScore,
+      projectsExperience: projectsExperienceScore,
+      atsOptimization: atsScore,
+      resumeStructure: structureScore,
+      education: educationScore,
+      achievementsImpact: achievementScore,
+    },
+  };
+}
+
+function scoreRoleFit(config, signals) {
+  const keywordData = roleKeywordMatches(signals, config);
+  const skillMatches = config.skills.filter(skill => hasTerm(signals.lower, skill));
+  const titleMatches = config.titles.filter(title => hasTerm(signals.lower, title));
+  const familyBonus = config.family === signals.roleConfig.family ? 8 : 0;
+  const matchPercentage = clamp(
+    keywordData.matchedKeywords.length * 7
+      + skillMatches.length * 5
+      + titleMatches.length * 14
+      + Math.min(10, signals.quantifiedMatches.length * 2)
+      + familyBonus,
+    12,
+    98,
+  );
+
+  return {
+    role: config.role,
+    matchPercentage,
+    matchedSkills: unique([...keywordData.matchedKeywords, ...skillMatches]).slice(0, 8),
+    missingSkills: keywordData.missingKeywords.slice(0, 6),
+    reason: keywordData.matchedKeywords.length || skillMatches.length
+      ? `Recommended because the resume shows ${unique([...keywordData.matchedKeywords, ...skillMatches]).slice(0, 5).join(', ')} and ${config.family} role signals.`
+      : `Closest fit based on transferable experience, but more direct ${config.role} evidence is needed.`,
+    salaryTrend: 'Demand depends on portfolio depth, measurable outcomes, tool fluency, and domain experience.',
+    recommendedLearning: config.suggestions.slice(0, 3),
+  };
+}
+
+function buildRecommendations(signals) {
+  const recommendations = ROLE_CONFIGS
+    .map(config => scoreRoleFit(config, signals))
+    .sort((a, b) => b.matchPercentage - a.matchPercentage)
+    .slice(0, 5);
+
+  if (!recommendations.length) {
+    return [scoreRoleFit(GENERAL_CONFIG, signals)];
+  }
+
+  return recommendations;
+}
+
+function buildStrengths(signals, keywordData, scores) {
+  return unique([
+    signals.contact.email && (signals.contact.phone || signals.contact.linkedin || signals.contact.portfolio) && 'Contact details and professional links are visible.',
+    keywordData.matchedKeywords.length >= Math.ceil(signals.roleConfig.keywords.length * 0.55) && `Strong ${signals.detectedRole} keyword alignment: ${keywordData.matchedKeywords.slice(0, 6).join(', ')}.`,
+    scores.scoreBreakdown.projectsExperience >= 72 && 'Experience, projects, portfolio, or campaigns show role-relevant evidence.',
+    signals.quantifiedMatches.length > 0 && 'Resume includes measurable impact signals.',
+    scores.scoreBreakdown.resumeStructure >= 75 && 'Resume structure is readable and ATS-friendly.',
+  ]);
+}
+
+function buildWeaknesses(signals, keywordData, scores) {
+  return unique([
+    keywordData.missingKeywords.length >= 4 && `Missing important ${signals.detectedRole} keywords: ${keywordData.missingKeywords.slice(0, 6).join(', ')}.`,
+    scores.scoreBreakdown.projectsExperience < 65 && `${signals.detectedRole} experience needs clearer role-specific evidence and outcomes.`,
+    scores.scoreBreakdown.achievementsImpact < 60 && 'Achievements are not quantified enough for a strong recruiter or ATS read.',
+    !signals.contact.portfolio && ['design', 'content', 'data', 'software'].includes(signals.roleConfig.family) && 'Portfolio, case study, project, or work sample links are missing.',
+    scores.scoreBreakdown.resumeStructure < 65 && 'Resume structure needs clearer headings, bullets, or contact details.',
+  ]);
+}
+
+function buildActionableImprovements(signals, keywordData, scores) {
+  return unique([
+    ...signals.roleConfig.suggestions,
+    keywordData.missingKeywords.length && `Add truthful evidence for ${keywordData.missingKeywords.slice(0, 6).join(', ')} instead of unrelated generic keywords.`,
+    scores.scoreBreakdown.achievementsImpact < 65 && 'Rewrite at least three bullets with measurable impact: action, context, metric, result.',
+    scores.scoreBreakdown.resumeStructure < 70 && 'Use clear headings for Summary, Skills, Experience, Education, and role-specific projects or portfolio work.',
+  ]).slice(0, 8);
+}
+
+function inferExperienceLevel(signals, overallScore) {
+  const maturity = signals.yearsOfExperience * 12 + overallScore * 0.45 + signals.quantifiedMatches.length * 5;
+  if (maturity >= 78) return 'Advanced';
+  if (maturity >= 50) return 'Intermediate';
+  return 'Beginner';
+}
+
+function buildAnalysis(resumeText, parsedData = {}) {
+  const signals = extractSignals(resumeText, parsedData);
+  const keywordData = roleKeywordMatches(signals, signals.roleConfig);
+  const scores = analyzeSections(signals, keywordData);
+  const recommendedRoles = buildRecommendations(signals);
+  const strengths = buildStrengths(signals, keywordData, scores);
+  const weaknesses = buildWeaknesses(signals, keywordData, scores);
+  const actionableImprovements = buildActionableImprovements(signals, keywordData, scores);
   const candidateName = signals.candidateName;
 
   return {
-    atsScore,
-    overallScore: atsScore,
+    atsScore: scores.atsScore,
+    overallScore: scores.overallScore,
     candidateName,
+    detectedRole: signals.detectedRole,
     welcomeMessage: candidateName
-      ? `Welcome ${candidateName} to AFAI Resume IQ. Let's analyze your resume.`
-      : "Welcome to AFAI Resume IQ. Let's analyze your resume.",
-    scoreBreakdown,
-    sectionAnalysis,
+      ? `Welcome ${candidateName} to AFAI Resume IQ. Let's analyze your ${signals.detectedRole} resume.`
+      : `Welcome to AFAI Resume IQ. Let's analyze your ${signals.detectedRole} resume.`,
+    scoreBreakdown: scores.scoreBreakdown,
+    sectionAnalysis: scores.sectionAnalysis,
     recommendedRoles,
-    bestCareerPath,
-    estimatedExperienceLevel: estimateExperienceLevel(signals.yearsOfExperience, signals.skills.length, signals.projectCount),
-    nextTechnologiesToLearn: unique([
-      ...signals.missingTargetKeywords,
-      ...recommendedRoles.flatMap(role => role.missingSkills),
-    ]).slice(0, 6),
-    portfolioImprovements: unique([
-      'Add one deployed project with live URL and GitHub link',
-      'Document architecture decisions and trade-offs in project descriptions',
-      'Add metrics: latency reduced, users served, bugs fixed, or automation time saved',
-    ]),
-    suggestedCertifications: inferCertifications(recommendedRoles).slice(0, 4),
-    topHiringCompanies: ['TCS', 'Infosys', 'Accenture', 'Deloitte', 'Amazon', 'Microsoft'].slice(0, 5),
-    strengths: strengths.length ? strengths : ['Readable resume structure', 'Found career-relevant keywords'],
-    weaknesses: weaknesses.length ? weaknesses : ['Resume is readable, but it can still improve evidence depth and ATS alignment.'],
+    bestCareerPath: recommendedRoles[0]?.role || signals.detectedRole,
+    estimatedExperienceLevel: inferExperienceLevel(signals, scores.overallScore),
+    nextTechnologiesToLearn: keywordData.missingKeywords.slice(0, 6),
+    portfolioImprovements: signals.roleConfig.suggestions,
+    suggestedCertifications: [],
+    topHiringCompanies: [],
+    strengths: strengths.length ? strengths : ['Resume has readable baseline information for the detected role.'],
+    weaknesses: weaknesses.length ? weaknesses : ['No major role mismatch detected, but more evidence can strengthen the profile.'],
     improvements: actionableImprovements,
     actionableImprovements,
-    missingKeywordSuggestions: signals.missingTargetKeywords,
+    missingKeywordSuggestions: keywordData.missingKeywords,
+    matchedRoleKeywords: keywordData.matchedKeywords,
     extractedSkills: signals.skills,
     resumeQualitySignals: {
       wordCount: signals.wordCount,
       detectedSections: Object.entries(signals.sections).filter(([, present]) => present).map(([section]) => section),
-      contact: {
-        email: signals.emailPresent,
-        phone: signals.phonePresent,
-        linkedin: signals.linkedinPresent,
-        github: signals.githubPresent,
-        portfolio: signals.portfolioPresent,
-      },
-      matchedTargetKeywords: signals.targetKeywordMatches,
+      detectedRole: signals.detectedRole,
+      roleEvidence: signals.roleEvidence,
+      roleScores: signals.roleScores.slice(0, 5).map(item => ({ role: item.role, score: item.score, evidence: item.evidence.slice(0, 6) })),
+      contact: signals.contact,
       quantifiedEvidenceCount: signals.quantifiedMatches.length,
     },
-    mode: 'deterministic',
+    mode: 'role-aware-deterministic',
   };
-}
-
-function parseJson(text) {
-  try {
-    return JSON.parse(text);
-  } catch {
-    const match = String(text || '').match(/\{[\s\S]*\}/);
-    if (!match) return null;
-    try {
-      return JSON.parse(match[0]);
-    } catch {
-      return null;
-    }
-  }
-}
-
-function normalizeRoleAnalysis(raw, fallback) {
-  const source = raw && typeof raw === 'object' ? raw : {};
-  const fallbackRoles = fallback.recommendedRoles || [];
-
-  return {
-    atsScore: clamp(source.atsScore ?? fallback.atsScore),
-    recommendedRoles: Array.isArray(source.recommendedRoles) && source.recommendedRoles.length
-      ? source.recommendedRoles.map((role, index) => ({
-        role: role.role || fallbackRoles[index]?.role || 'Software Engineer',
-        matchPercentage: clamp(role.matchPercentage ?? role.score ?? fallbackRoles[index]?.matchPercentage ?? 60),
-        reason: role.reason || fallbackRoles[index]?.reason || 'Role aligns with detected skills and project keywords.',
-        matchedSkills: Array.isArray(role.matchedSkills) ? role.matchedSkills : fallbackRoles[index]?.matchedSkills || [],
-        missingSkills: Array.isArray(role.missingSkills) ? role.missingSkills : fallbackRoles[index]?.missingSkills || [],
-        salaryTrend: role.salaryTrend || fallbackRoles[index]?.salaryTrend || 'Demand varies by market and experience level.',
-        recommendedLearning: Array.isArray(role.recommendedLearning) ? role.recommendedLearning : fallbackRoles[index]?.recommendedLearning || [],
-      }))
-      : fallbackRoles,
-    bestCareerPath: source.bestCareerPath || fallback.bestCareerPath,
-    estimatedExperienceLevel: source.estimatedExperienceLevel || fallback.estimatedExperienceLevel,
-    nextTechnologiesToLearn: Array.isArray(source.nextTechnologiesToLearn) ? source.nextTechnologiesToLearn : fallback.nextTechnologiesToLearn,
-    portfolioImprovements: Array.isArray(source.portfolioImprovements) ? source.portfolioImprovements : fallback.portfolioImprovements,
-    suggestedCertifications: Array.isArray(source.suggestedCertifications) ? source.suggestedCertifications : fallback.suggestedCertifications,
-    topHiringCompanies: Array.isArray(source.topHiringCompanies) ? source.topHiringCompanies : fallback.topHiringCompanies,
-    strengths: Array.isArray(source.strengths) ? source.strengths : fallback.strengths,
-    weaknesses: Array.isArray(source.weaknesses) ? source.weaknesses : fallback.weaknesses,
-    improvements: Array.isArray(source.improvements) ? source.improvements : fallback.improvements,
-    actionableImprovements: Array.isArray(source.actionableImprovements) ? source.actionableImprovements : fallback.actionableImprovements,
-    missingKeywordSuggestions: Array.isArray(source.missingKeywordSuggestions) ? source.missingKeywordSuggestions : fallback.missingKeywordSuggestions,
-    sectionAnalysis: Array.isArray(source.sectionAnalysis) ? source.sectionAnalysis : fallback.sectionAnalysis,
-    scoreBreakdown: source.scoreBreakdown && typeof source.scoreBreakdown === 'object' ? source.scoreBreakdown : fallback.scoreBreakdown,
-    candidateName: typeof source.candidateName === 'string' ? source.candidateName : fallback.candidateName,
-    welcomeMessage: typeof source.welcomeMessage === 'string' ? source.welcomeMessage : fallback.welcomeMessage,
-    extractedSkills: Array.isArray(source.extractedSkills) ? source.extractedSkills : fallback.extractedSkills,
-    resumeQualitySignals: source.resumeQualitySignals && typeof source.resumeQualitySignals === 'object' ? source.resumeQualitySignals : fallback.resumeQualitySignals,
-    mode: source.mode || 'ai',
-  };
-}
-
-function buildPrompt(resumeText, parsedData) {
-  return `
-You are an expert ATS system, technical recruiter, and career coach.
-Analyze the resume and recommend suitable tech job roles.
-
-Supported roles:
-${SUPPORTED_ROLES.map(role => `- ${role}`).join('\n')}
-
-Evaluate based on:
-- contact information
-- professional summary quality
-- skills section strength
-- project details
-- work or internship experience
-- education and certifications
-- quantified achievements
-- ATS keyword match
-- grammar and clarity
-- resume length and structure
-
-Use only evidence present in the resume text. Do not invent companies, projects, metrics, certifications, links, or skills.
-Make suggestions specific to missing or weak evidence in this resume.
-
-Return ONLY valid JSON in this exact shape:
-{
-  "atsScore": 82,
-  "candidateName": "Name found in resume or empty string",
-  "welcomeMessage": "Welcome Name to AFAI Resume IQ. Let's analyze your resume.",
-  "estimatedExperienceLevel": "Beginner|Intermediate|Advanced",
-  "bestCareerPath": "MERN Stack Developer",
-  "scoreBreakdown": {
-    "contactInformation": 8,
-    "professionalSummary": 7,
-    "skillsSection": 12,
-    "projectDetails": 8,
-    "experience": 7,
-    "education": 6,
-    "certifications": 2,
-    "quantifiedAchievements": 4,
-    "atsKeywordMatch": 7,
-    "grammarClarity": 3,
-    "lengthStructure": 3
-  },
-  "sectionAnalysis": [
-    {
-      "section": "Projects",
-      "score": 70,
-      "status": "Developing",
-      "feedback": "Specific evidence from the resume",
-      "recommendation": "Specific improvement",
-      "evidence": "Short excerpt or detected signal"
-    }
-  ],
-  "recommendedRoles": [
-    {
-      "role": "MERN Stack Developer",
-      "matchPercentage": 91,
-      "reason": "Strong React, Node.js, MongoDB projects detected",
-      "matchedSkills": ["React", "Node.js", "MongoDB"],
-      "missingSkills": ["Redis", "Docker"],
-      "salaryTrend": "Short market-oriented sentence",
-      "recommendedLearning": ["Learn Docker basics", "Build scalable backend APIs"]
-    }
-  ],
-  "nextTechnologiesToLearn": [],
-  "portfolioImprovements": [],
-  "suggestedCertifications": [],
-  "topHiringCompanies": [],
-  "strengths": [],
-  "weaknesses": [],
-  "improvements": [],
-  "actionableImprovements": [],
-  "missingKeywordSuggestions": []
-}
-
-Resume text:
-${resumeText.slice(0, 12000)}
-
-Parsed resume context:
-${JSON.stringify(parsedData || {}, null, 2).slice(0, 5000)}
-`.trim();
 }
 
 class ResumeAIService {
   async analyzeResumeForRoles(resumeText, parsedData = {}) {
-    const fallback = deterministicRoleRecommendations(resumeText, parsedData);
-
-    try {
-      const gemini = getGeminiClient();
-      if (gemini) {
-        const model = gemini.getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-2.5-flash' });
-        const result = await model.generateContent(buildPrompt(resumeText, parsedData));
-        const normalized = normalizeRoleAnalysis(parseJson(result.response.text()), fallback);
-
-        return {
-          ...normalized,
-          atsScore: fallback.atsScore,
-          overallScore: fallback.overallScore,
-          candidateName: fallback.candidateName,
-          welcomeMessage: fallback.welcomeMessage,
-          scoreBreakdown: fallback.scoreBreakdown,
-          sectionAnalysis: fallback.sectionAnalysis,
-          strengths: fallback.strengths,
-          weaknesses: fallback.weaknesses,
-          improvements: fallback.improvements,
-          actionableImprovements: fallback.actionableImprovements,
-          missingKeywordSuggestions: fallback.missingKeywordSuggestions,
-          extractedSkills: fallback.extractedSkills,
-          resumeQualitySignals: fallback.resumeQualitySignals,
-          mode: 'ai-assisted-deterministic',
-        };
-      }
-    } catch (error) {
-      console.warn('Resume role recommendation AI fallback:', error.message);
-    }
-
-    return fallback;
+    return buildAnalysis(resumeText, parsedData);
   }
 }
 

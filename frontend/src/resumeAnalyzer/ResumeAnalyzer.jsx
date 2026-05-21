@@ -4,138 +4,6 @@ import { analyzeResumeText, uploadResume } from '../services/resumeService';
 import RecommendedRoles from './RecommendedRoles';
 import { GlassCard, GlowButton, MotionPage, NeonBadge } from '../components/PremiumUI';
 
-const LOCAL_ROLE_CONFIGS = [
-  {
-    role: 'UX/UI Designer',
-    keywords: ['Figma', 'Wireframing', 'Prototyping', 'User Research', 'Usability Testing', 'Accessibility', 'Design Systems', 'Interaction Design', 'User Flow', 'Mobile Design'],
-    suggestions: ['Add portfolio case study links.', 'Show design process from research to prototype.', 'Include usability testing and design impact metrics.'],
-    careers: ['UX/UI Designer', 'Product Designer', 'UX Researcher'],
-  },
-  {
-    role: 'Full Stack Developer',
-    keywords: ['React', 'Node.js', 'Express.js', 'MongoDB', 'REST API', 'Authentication', 'GitHub', 'Deployment'],
-    suggestions: ['Add API, database, authentication, architecture, and deployment details.', 'Include live links and GitHub repositories.', 'Quantify performance or user impact.'],
-    careers: ['Full Stack Developer', 'MERN Stack Developer', 'Backend Developer'],
-  },
-  {
-    role: 'Data Analyst',
-    keywords: ['SQL', 'Excel', 'Power BI', 'Tableau', 'Python', 'Data Visualization', 'Dashboard', 'Statistics'],
-    suggestions: ['Add business questions, dataset size, dashboards, and decision impact.', 'Quantify reporting automation or insight outcomes.', 'Link dashboard samples if possible.'],
-    careers: ['Data Analyst', 'BI Analyst', 'Business Analyst'],
-  },
-  {
-    role: 'Digital Marketer',
-    keywords: ['SEO', 'Google Ads', 'Meta Ads', 'Content Marketing', 'Email Marketing', 'Analytics', 'Campaigns', 'Lead Generation'],
-    suggestions: ['Add campaign metrics such as ROAS, CTR, CPL, conversions, or traffic growth.', 'Mention analytics and ad platform tools.', 'Separate organic, paid, email, and content experience.'],
-    careers: ['Digital Marketer', 'SEO Specialist', 'Performance Marketer'],
-  },
-  {
-    role: 'Business Analyst',
-    keywords: ['Requirements Gathering', 'Stakeholder Management', 'BRD', 'FRD', 'User Stories', 'Process Mapping', 'SQL', 'UAT', 'Agile'],
-    suggestions: ['Show requirements translated into workflows, user stories, and delivered outcomes.', 'Quantify process improvements or cost savings.', 'Mention tools like Jira and Confluence.'],
-    careers: ['Business Analyst', 'Product Analyst', 'Functional Analyst'],
-  },
-];
-
-function findCandidateName(text) {
-  const line = text
-    .split(/\r?\n/)
-    .map(item => item.trim())
-    .filter(Boolean)
-    .slice(0, 8)
-    .find(item => /^[A-Za-z][A-Za-z.'-]+(?:\s+[A-Za-z][A-Za-z.'-]+){1,3}$/.test(item) && !/developer|engineer|resume|email|phone/i.test(item));
-
-  return line || '';
-}
-
-function localAnalyze(text) {
-  const words = text.split(/\s+/).filter(Boolean);
-  const detectedRoleConfig = [...LOCAL_ROLE_CONFIGS]
-    .map(config => ({
-      ...config,
-      matches: config.keywords.filter(keyword => new RegExp(keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\./g, '\\.?'), 'i').test(text)),
-    }))
-    .sort((a, b) => b.matches.length - a.matches.length)[0] || LOCAL_ROLE_CONFIGS[0];
-  const skills = detectedRoleConfig.matches;
-  const candidateName = findCandidateName(text);
-  const hasEmail = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(text);
-  const hasPhone = /(?:\+?\d[\d\s().-]{7,}\d)/.test(text);
-  const hasProjects = /\b(projects?|built|developed|implemented|created)\b/i.test(text);
-  const hasExperience = /\b(experience|internship|worked|developer|engineer)\b/i.test(text);
-  const hasEducation = /\b(education|degree|university|college|bachelor|master|b\.tech)\b/i.test(text);
-  const hasSummary = /\b(summary|professional summary|profile|objective)\b/i.test(text);
-  const hasMetrics = /\b\d+%|\b\d+x|\b\d+\+|\b\d+\s*(users?|apis?|projects?|requests?)\b/i.test(text);
-  const matchedKeywords = detectedRoleConfig.matches;
-  const missingKeywordSuggestions = detectedRoleConfig.keywords.filter(keyword => !matchedKeywords.includes(keyword));
-  const atsScore = Math.round((matchedKeywords.length / Math.max(1, detectedRoleConfig.keywords.length)) * 100);
-  const score = Math.min(
-    96,
-    24
-      + (hasEmail ? 5 : 0)
-      + (hasPhone ? 4 : 0)
-      + (hasSummary ? 8 : 0)
-      + Math.min(18, skills.length * 2)
-      + (hasProjects ? 12 : 0)
-      + (hasExperience ? 10 : 0)
-      + (hasEducation ? 7 : 0)
-      + (hasMetrics ? 10 : 0)
-      + Math.round(atsScore * 0.2)
-      + Math.min(8, Math.floor(words.length / 80)),
-  );
-
-  return {
-    atsScore,
-    overallScore: score,
-    candidateName,
-    detectedRole: detectedRoleConfig.role,
-    welcomeMessage: candidateName
-      ? `Welcome ${candidateName} to AFAI Resume IQ. Let's analyze your ${detectedRoleConfig.role} resume.`
-      : `Welcome to AFAI Resume IQ. Let's analyze your ${detectedRoleConfig.role} resume.`,
-    skills,
-    strengths: [
-      skills.length >= 5 && `Detected role keywords: ${skills.slice(0, 6).join(', ')}.`,
-      hasProjects && 'Project work is visible in the resume text.',
-      hasMetrics && 'Measurable impact is present.',
-      hasEducation && 'Education details are present.',
-    ].filter(Boolean),
-    weaknesses: [
-      !hasSummary && 'Professional summary is missing or not clearly labeled.',
-      !hasProjects && 'Projects section is missing or too generic.',
-      !hasExperience && 'Experience or internship details are not clear.',
-      !hasMetrics && 'Achievements need numbers, scale, users, performance, or time saved.',
-      missingKeywordSuggestions.length && `Missing ${detectedRoleConfig.role} ATS keywords: ${missingKeywordSuggestions.slice(0, 6).join(', ')}.`,
-    ].filter(Boolean),
-    improvements: [
-      !hasSummary && `Add a 2-3 line summary naming your ${detectedRoleConfig.role} focus and strongest tools.`,
-      !hasProjects && detectedRoleConfig.suggestions[0],
-      !hasMetrics && 'Add quantified bullets such as "reduced latency by 30%" or "served 500+ users".',
-      missingKeywordSuggestions.length && `Add truthful evidence for ${missingKeywordSuggestions.slice(0, 6).join(', ')}.`,
-    ].filter(Boolean),
-    actionableImprovements: [
-      !hasSummary && `Add a concise summary targeted to ${detectedRoleConfig.role} roles.`,
-      ...detectedRoleConfig.suggestions,
-      !hasMetrics && 'Convert responsibilities into quantified achievements.',
-    ].filter(Boolean),
-    sectionAnalysis: [
-      { section: 'Summary', score: hasSummary ? 78 : 35, status: hasSummary ? 'Developing' : 'Needs work', feedback: hasSummary ? 'Summary signal detected.' : 'No clear summary section detected.', recommendation: 'State target role, core stack, AI/full-stack focus, and one outcome.' },
-      { section: 'Skills', score: Math.min(95, skills.length * 12), status: skills.length >= 5 ? 'Strong' : 'Developing', feedback: skills.length ? `Detected ${skills.join(', ')}.` : 'No strong role-specific skills list detected.', recommendation: `Group skills around ${detectedRoleConfig.role} tools, methods, and outcomes.` },
-      { section: 'Projects', score: hasProjects ? 72 : 30, status: hasProjects ? 'Developing' : 'Needs work', feedback: hasProjects ? 'Project, portfolio, or campaign evidence found.' : 'Project, portfolio, or campaign evidence is missing.', recommendation: detectedRoleConfig.suggestions[0] },
-      { section: 'Experience', score: hasExperience ? 70 : 35, status: hasExperience ? 'Developing' : 'Needs work', feedback: hasExperience ? 'Experience signal detected.' : 'No clear work or internship section detected.', recommendation: 'Use action verbs and show responsibilities, technologies, and outcomes.' },
-      { section: 'Education', score: hasEducation ? 82 : 42, status: hasEducation ? 'Strong' : 'Needs work', feedback: hasEducation ? 'Education signal detected.' : 'Education details are thin or missing.', recommendation: 'Include degree, institution, graduation year, and relevant coursework if useful.' },
-      { section: 'ATS Optimization', score: atsScore, status: atsScore >= 75 ? 'Strong' : atsScore >= 45 ? 'Developing' : 'Needs work', feedback: `Matched ${matchedKeywords.length}/${detectedRoleConfig.keywords.length} ${detectedRoleConfig.role} keywords.`, recommendation: `Add truthful evidence for ${missingKeywordSuggestions.slice(0, 8).join(', ') || 'role-specific keywords'}.` },
-      { section: 'Formatting', score: words.length >= 250 ? 78 : 48, status: words.length >= 250 ? 'Developing' : 'Needs work', feedback: `Resume text has ${words.length} words.`, recommendation: 'Use clear headings, concise bullets, and action-technology-impact structure.' },
-    ],
-    missingKeywordSuggestions,
-    matchedRoleKeywords: matchedKeywords,
-    recommendedRoles: detectedRoleConfig.careers.map((role, index) => ({ role, matchPercentage: Math.max(45, Math.min(94, score - index * 7)), reason: `Detected ${detectedRoleConfig.role} fit from role keywords, experience signals, and ATS coverage.`, matchedSkills: matchedKeywords, missingSkills: missingKeywordSuggestions.slice(0, 5), recommendedLearning: detectedRoleConfig.suggestions })),
-    bestCareerPath: detectedRoleConfig.role,
-    estimatedExperienceLevel: words.length > 180 ? 'Intermediate' : 'Beginner',
-    nextTechnologiesToLearn: missingKeywordSuggestions.slice(0, 6),
-    portfolioImprovements: ['Add live project links', 'Add measurable impact', 'Explain architecture trade-offs'],
-    mode: 'local-evidence-fallback',
-  };
-}
-
 function pickList(...lists) {
   return lists.find(items => Array.isArray(items) && items.length) || [];
 }
@@ -157,8 +25,8 @@ export default function ResumeAnalyzer() {
       const result = await analyzeResumeText({ resumeText });
       setAnalysis(result);
     } catch (err) {
-      setAnalysis(localAnalyze(resumeText));
-      setError(err.response?.data?.error || 'Backend analyzer unavailable. Showing local recommendation fallback.');
+      setAnalysis(null);
+      setError(err.response?.data?.error || 'Backend analyzer unavailable. Please log in again or retry after the backend wakes up.');
     } finally {
       setIsAnalyzing(false);
     }

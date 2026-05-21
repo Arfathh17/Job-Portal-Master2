@@ -7,6 +7,12 @@ const { auth, JWT_SECRET, normalizeRole } = require('../middleware/auth');
 const router = express.Router();
 
 const allowedRoles = new Set(['candidate', 'recruiter', 'admin']);
+const demoLogin = {
+  name: 'Alex Johnson',
+  email: 'jobseeker@demo.com',
+  password: 'demo123',
+  role: 'candidate',
+};
 
 function getUserSource() {
   if (getIsConnected()) {
@@ -18,6 +24,36 @@ function getUserSource() {
 function normalizeRequestedRole(role) {
   const normalized = normalizeRole(role || 'candidate');
   return allowedRoles.has(normalized) ? normalized : 'candidate';
+}
+
+function isDemoLogin(email, password) {
+  return String(email || '').toLowerCase().trim() === demoLogin.email
+    && password === demoLogin.password;
+}
+
+async function ensureDemoUser(source) {
+  if (source.type === 'mongo') {
+    let user = await source.model.findOne({ email: demoLogin.email });
+    if (!user) {
+      return source.model.create(demoLogin);
+    }
+
+    const hasDemoPassword = typeof user.comparePassword === 'function'
+      ? await user.comparePassword(demoLogin.password)
+      : await bcrypt.compare(demoLogin.password, user.password);
+
+    if (!hasDemoPassword || normalizeRole(user.role) !== demoLogin.role) {
+      user.name = user.name || demoLogin.name;
+      user.password = demoLogin.password;
+      user.role = demoLogin.role;
+      await user.save();
+    }
+
+    return user;
+  }
+
+  const existing = await source.store.findByEmail(demoLogin.email);
+  return existing || source.store.create(demoLogin);
 }
 
 function signToken(user) {
@@ -94,9 +130,13 @@ router.post('/login', async (req, res) => {
     }
 
     const source = getUserSource();
-    const user = source.type === 'mongo'
+    let user = source.type === 'mongo'
       ? await source.model.findOne({ email: email.toLowerCase() })
       : await source.store.findByEmail(email.toLowerCase());
+
+    if (isDemoLogin(email, password)) {
+      user = await ensureDemoUser(source);
+    }
 
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password.' });

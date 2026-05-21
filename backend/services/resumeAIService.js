@@ -74,6 +74,37 @@ const CERTIFICATIONS = {
   security: ['CompTIA Security+', 'ISC2 Certified in Cybersecurity'],
 };
 
+const TARGET_KEYWORDS = [
+  { label: 'React', terms: ['react'] },
+  { label: 'Node.js', terms: ['node.js', 'nodejs'] },
+  { label: 'Express.js', terms: ['express.js', 'express'] },
+  { label: 'MongoDB', terms: ['mongodb', 'mongo db'] },
+  { label: 'REST API', terms: ['rest api', 'restful api', 'api integration'] },
+  { label: 'Git', terms: ['git'] },
+  { label: 'GitHub', terms: ['github'] },
+  { label: 'Deployment', terms: ['deployment', 'deployed', 'render', 'vercel', 'netlify', 'aws', 'azure', 'gcp'] },
+  { label: 'Authentication', terms: ['authentication', 'auth', 'jwt', 'oauth', 'firebase auth'] },
+  { label: 'AI integration', terms: ['ai integration', 'artificial intelligence', 'llm', 'generative ai'] },
+  { label: 'OpenAI API / Gemini API', terms: ['openai api', 'gemini api', 'openai', 'gemini'] },
+];
+
+const SECTION_HEADINGS = [
+  'summary',
+  'professional summary',
+  'profile',
+  'objective',
+  'skills',
+  'technical skills',
+  'projects',
+  'experience',
+  'work experience',
+  'internship',
+  'internships',
+  'education',
+  'certifications',
+  'achievements',
+];
+
 function isUsableKey(key) {
   return typeof key === 'string'
     && key.trim().length > 20
@@ -102,6 +133,103 @@ function unique(items) {
   return [...new Set(items.filter(Boolean))];
 }
 
+function toTitleCaseName(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .split(' ')
+    .map(part => part.length <= 2 && part === part.toUpperCase()
+      ? part
+      : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(' ');
+}
+
+function isLikelyName(line) {
+  const value = String(line || '').trim();
+  if (!value || value.length < 3 || value.length > 60) return false;
+  if (/@|https?:|www\.|\d|resume|curriculum|developer|engineer|email|phone|linkedin|github/i.test(value)) return false;
+  const words = value.split(/\s+/);
+  if (words.length < 2 || words.length > 4) return false;
+  return words.every(word => /^[A-Za-z][A-Za-z.'-]*$/.test(word));
+}
+
+function isLikelyParsedName(value) {
+  const normalized = String(value || '').trim();
+  if (!normalized || normalized.length < 3 || normalized.length > 60) return false;
+  if (/@|https?:|www\.|\d|resume|curriculum|developer|engineer|email|phone|linkedin|github/i.test(normalized)) return false;
+  return normalized.split(/\s+/).every(word => /^[A-Za-z][A-Za-z.'-]*$/.test(word));
+}
+
+function extractCandidateName(resumeText, parsedData = {}) {
+  const parsedName = parsedData.personalInfo?.name
+    || parsedData.header?.name
+    || parsedData.name
+    || parsedData.fullName;
+
+  if (isLikelyParsedName(parsedName)) {
+    return toTitleCaseName(parsedName);
+  }
+
+  const lines = String(resumeText || '')
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .slice(0, 10);
+
+  const nameLine = lines.find(isLikelyName);
+  return nameLine ? toTitleCaseName(nameLine) : '';
+}
+
+function hasAnyTerm(text, terms) {
+  return terms.some(term => hasTerm(text, term));
+}
+
+function getSectionText(text, headings) {
+  const lines = String(text || '').split(/\r?\n/);
+  const normalizedTargets = headings.map(heading => heading.toLowerCase());
+  const allHeadings = new Set(SECTION_HEADINGS.map(heading => heading.toLowerCase()));
+
+  const startIndex = lines.findIndex(line => {
+    const normalized = line.trim().replace(/[:\-]+$/, '').toLowerCase();
+    return normalizedTargets.includes(normalized);
+  });
+
+  if (startIndex === -1) return '';
+
+  const endIndex = lines.findIndex((line, index) => {
+    if (index <= startIndex) return false;
+    const normalized = line.trim().replace(/[:\-]+$/, '').toLowerCase();
+    return allHeadings.has(normalized);
+  });
+
+  return lines.slice(startIndex + 1, endIndex === -1 ? lines.length : endIndex).join('\n').trim();
+}
+
+function detectSections(text) {
+  const lower = String(text || '').toLowerCase();
+  return {
+    summary: /\b(summary|professional summary|profile|objective)\b/i.test(lower),
+    skills: /\b(skills|technical skills|technologies|tools)\b/i.test(lower),
+    projects: /\b(projects?|portfolio)\b/i.test(lower),
+    experience: /\b(experience|work experience|internship|employment)\b/i.test(lower),
+    education: /\b(education|degree|university|college|bachelor|master|b\.tech|m\.tech)\b/i.test(lower),
+    certifications: /\b(certifications?|certificates?|certified)\b/i.test(lower),
+  };
+}
+
+function buildSection(section, score, feedback, recommendation, evidence = '') {
+  const normalizedScore = clamp(score);
+  const status = normalizedScore >= 78 ? 'Strong' : normalizedScore >= 55 ? 'Developing' : 'Needs work';
+  return {
+    section,
+    score: normalizedScore,
+    status,
+    feedback,
+    recommendation,
+    evidence,
+  };
+}
+
 function extractResumeSignals(resumeText, parsedData = {}) {
   const text = String(resumeText || '');
   const lower = text.toLowerCase();
@@ -121,7 +249,7 @@ function extractResumeSignals(resumeText, parsedData = {}) {
     ...knownTerms.filter(term => hasTerm(lower, term)),
   ]);
 
-  const projectCount = (lower.match(/\b(project|built|developed|implemented|created|designed)\b/g) || []).length;
+  const projectCount = (lower.match(/\b(projects?|built|developed|implemented|created|designed)\b/g) || []).length;
   const hasMetrics = /\b\d+%|\b\d+\s*percent|\b\d+x|\b\d+\+|\b(increased|reduced|improved|optimized)\b/i.test(text);
   const educationSignals = unique([
     /bachelor|b\.tech|bsc|bs\b/i.test(text) && 'Bachelor degree',
@@ -131,6 +259,26 @@ function extractResumeSignals(resumeText, parsedData = {}) {
   ]);
   const yearsMatch = lower.match(/(\d+)\+?\s*(?:years|yrs)/);
   const yearsOfExperience = Number(parsedData.yearsOfExperience ?? yearsMatch?.[1] ?? 0);
+  const sections = detectSections(text);
+  const summaryText = parsedData.summary || getSectionText(text, ['summary', 'professional summary', 'profile', 'objective']);
+  const projectText = getSectionText(text, ['projects', 'project', 'portfolio']);
+  const experienceText = getSectionText(text, ['experience', 'work experience', 'internship', 'internships', 'employment']);
+  const educationText = getSectionText(text, ['education']);
+  const certificationText = getSectionText(text, ['certifications', 'certification', 'certificates']);
+  const emailPresent = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(text);
+  const phonePresent = /(?:\+?\d[\d\s().-]{7,}\d)/.test(text);
+  const linkedinPresent = /linkedin\.com|linkedin/i.test(text);
+  const githubPresent = /github\.com|github/i.test(text);
+  const portfolioPresent = /https?:\/\/|www\.|portfolio|vercel|netlify|render/i.test(text);
+  const quantifiedMatches = text.match(/\b\d+(?:\.\d+)?\s*(?:%|percent|x|\+|users?|clients?|projects?|apis?|seconds?|minutes?|hours?|days?|requests?|records?)/gi) || [];
+  const impactVerbPresent = /\b(increased|reduced|improved|optimized|automated|deployed|launched|scaled|saved|built|integrated|migrated)\b/i.test(text);
+  const bulletCount = (text.match(/^\s*[-*]\s+/gm) || []).length;
+  const longSentenceCount = text
+    .split(/[.!?]\s+/)
+    .filter(sentence => sentence.trim().split(/\s+/).length > 45)
+    .length;
+  const targetKeywordMatches = TARGET_KEYWORDS.filter(keyword => hasAnyTerm(lower, keyword.terms)).map(keyword => keyword.label);
+  const missingTargetKeywords = TARGET_KEYWORDS.filter(keyword => !targetKeywordMatches.includes(keyword.label)).map(keyword => keyword.label);
 
   return {
     text,
@@ -141,6 +289,24 @@ function extractResumeSignals(resumeText, parsedData = {}) {
     educationSignals,
     yearsOfExperience,
     wordCount: text.split(/\s+/).filter(Boolean).length,
+    candidateName: extractCandidateName(text, parsedData),
+    sections,
+    summaryText,
+    projectText,
+    experienceText,
+    educationText,
+    certificationText,
+    emailPresent,
+    phonePresent,
+    linkedinPresent,
+    githubPresent,
+    portfolioPresent,
+    quantifiedMatches,
+    impactVerbPresent,
+    bulletCount,
+    longSentenceCount,
+    targetKeywordMatches,
+    missingTargetKeywords,
   };
 }
 
@@ -199,6 +365,92 @@ function inferCertifications(topRoles) {
 
 function deterministicRoleRecommendations(resumeText, parsedData = {}) {
   const signals = extractResumeSignals(resumeText, parsedData);
+  const contactScore = clamp(
+    (signals.emailPresent ? 3 : 0)
+      + (signals.phonePresent ? 3 : 0)
+      + (signals.linkedinPresent ? 2 : 0)
+      + ((signals.githubPresent || signals.portfolioPresent) ? 2 : 0),
+    0,
+    10,
+  );
+  const summaryWords = signals.summaryText.split(/\s+/).filter(Boolean).length;
+  const summaryScore = clamp(
+    signals.summaryText
+      ? 4
+        + (summaryWords >= 25 ? 3 : summaryWords >= 12 ? 1 : 0)
+        + (signals.targetKeywordMatches.length ? 2 : 0)
+        + (signals.impactVerbPresent ? 1 : 0)
+      : 2,
+    0,
+    10,
+  );
+  const skillsScore = clamp(
+    Math.min(15, signals.skills.length * 1.4 + signals.targetKeywordMatches.length * 0.9),
+    0,
+    15,
+  );
+  const projectTechMentions = ROLE_PROFILES['MERN Stack Developer'].skills
+    .filter(skill => hasTerm(signals.projectText.toLowerCase(), skill)).length;
+  const projectsScore = clamp(
+    (signals.sections.projects || signals.projectCount > 0 ? 4 : 1)
+      + Math.min(4, signals.projectCount)
+      + Math.min(3, projectTechMentions)
+      + (signals.quantifiedMatches.length ? 1 : 0),
+    0,
+    12,
+  );
+  const experienceScore = clamp(
+    (signals.sections.experience || signals.yearsOfExperience > 0 ? 5 : 2)
+      + Math.min(4, signals.yearsOfExperience)
+      + (/intern|developer|engineer|worked|company|organization/i.test(signals.experienceText || signals.text) ? 2 : 0)
+      + (signals.quantifiedMatches.length && signals.sections.experience ? 1 : 0),
+    0,
+    12,
+  );
+  const educationScore = clamp(
+    signals.educationSignals.length || signals.sections.education || signals.educationText
+      ? 6 + Math.min(2, signals.educationSignals.length)
+      : 2,
+    0,
+    8,
+  );
+  const certificationScore = clamp(
+    signals.sections.certifications || signals.certificationText || /certified|certificate/i.test(signals.text) ? 5 : 1,
+    0,
+    5,
+  );
+  const quantifiedScore = clamp(
+    Math.min(8, signals.quantifiedMatches.length * 2.5) + (signals.impactVerbPresent ? 2 : 0),
+    0,
+    10,
+  );
+  const keywordScore = clamp((signals.targetKeywordMatches.length / TARGET_KEYWORDS.length) * 10, 0, 10);
+  const clarityScore = clamp(
+    4 - Math.min(2, signals.longSentenceCount) - (/ {3,}|\t{2,}/.test(signals.text) ? 1 : 0),
+    1,
+    4,
+  );
+  const structureScore = clamp(
+    (Object.values(signals.sections).filter(Boolean).length >= 5 ? 2 : 0)
+      + (signals.bulletCount >= 4 ? 1 : 0)
+      + (signals.wordCount >= 250 && signals.wordCount <= 900 ? 1 : 0),
+    0,
+    4,
+  );
+  const scoreBreakdown = {
+    contactInformation: contactScore,
+    professionalSummary: summaryScore,
+    skillsSection: skillsScore,
+    projectDetails: projectsScore,
+    experience: experienceScore,
+    education: educationScore,
+    certifications: certificationScore,
+    quantifiedAchievements: quantifiedScore,
+    atsKeywordMatch: keywordScore,
+    grammarClarity: clarityScore,
+    lengthStructure: structureScore,
+  };
+  const atsScore = clamp(Object.values(scoreBreakdown).reduce((total, score) => total + score, 0), 25, 98);
   const recommendedRoles = SUPPORTED_ROLES.map(role => {
     const profile = ROLE_PROFILES[role];
     const roleScore = scoreRole(profile, signals);
@@ -218,48 +470,151 @@ function deterministicRoleRecommendations(resumeText, parsedData = {}) {
     .sort((a, b) => b.matchPercentage - a.matchPercentage)
     .slice(0, 5);
 
-  const atsScore = clamp(
-    38
-      + Math.min(25, signals.skills.length * 3)
-      + Math.min(15, signals.projectCount * 3)
-      + (signals.hasMetrics ? 12 : 0)
-      + Math.min(10, Math.floor(signals.wordCount / 80)),
-    30,
-    96,
-  );
-
   const strengths = unique([
-    signals.skills.length >= 5 && 'Strong technical keyword coverage',
-    signals.projectCount >= 2 && 'Project experience is visible',
-    signals.hasMetrics && 'Includes measurable impact signals',
-    signals.educationSignals.length > 0 && 'Education or certification signal detected',
+    contactScore >= 8 && 'Contact details are easy to find, including email plus professional links or phone.',
+    signals.targetKeywordMatches.length >= 6 && `Strong ATS keyword coverage for ${signals.targetKeywordMatches.slice(0, 5).join(', ')}.`,
+    signals.projectCount >= 2 && 'Project work is visible and gives recruiters concrete engineering evidence.',
+    signals.quantifiedMatches.length > 0 && 'The resume includes measurable impact signals instead of only responsibilities.',
+    educationScore >= 6 && 'Education information is present and supports the candidate profile.',
   ]);
 
-  const improvements = unique([
-    !signals.hasMetrics && 'Add measurable impact such as performance, users, revenue, or time saved',
-    signals.projectCount < 2 && 'Add 2-3 portfolio projects with stack, architecture, and outcome',
-    signals.skills.length < 6 && 'Add more role-specific technical keywords',
-    'Tailor summary and skills section to each target job description',
+  const weaknesses = unique([
+    contactScore < 7 && 'Contact section is incomplete; recruiters may not see enough direct reach-out links.',
+    summaryScore < 6 && 'Professional summary is missing or too generic for full-stack and AI developer roles.',
+    projectsScore < 7 && 'Projects need stronger stack, feature, API, deployment, and impact details.',
+    experienceScore < 7 && 'Experience or internship section needs clearer responsibilities and outcomes.',
+    quantifiedScore < 6 && 'Achievements are not quantified with numbers, scale, users, performance, or time saved.',
+    keywordScore < 6 && `Missing ATS keywords: ${signals.missingTargetKeywords.slice(0, 6).join(', ')}.`,
   ]);
+
+  const sectionAnalysis = [
+    buildSection(
+      'Summary',
+      summaryScore * 10,
+      signals.summaryText
+        ? `Summary detected with ${summaryWords} words. It ${summaryWords >= 25 ? 'has enough room to position the candidate' : 'is short and should sell the target role more clearly'}.`
+        : 'No dedicated professional summary was detected.',
+      signals.summaryText
+        ? 'Mention your target role, strongest stack, AI/full-stack focus, and one measurable achievement in 2-3 lines.'
+        : 'Add a 2-3 line summary naming full-stack or AI developer focus, strongest technologies, and one outcome.',
+      signals.summaryText.slice(0, 160),
+    ),
+    buildSection(
+      'Skills',
+      Math.round((skillsScore / 15) * 100),
+      signals.skills.length
+        ? `Detected ${signals.skills.slice(0, 8).join(', ')}.`
+        : 'No strong technical skills list was detected.',
+      signals.missingTargetKeywords.length
+        ? `Add missing role keywords such as ${signals.missingTargetKeywords.slice(0, 6).join(', ')} where they are truthful.`
+        : 'Keep the skills section grouped by frontend, backend, database, AI, tools, and deployment.',
+      signals.targetKeywordMatches.join(', '),
+    ),
+    buildSection(
+      'Projects',
+      Math.round((projectsScore / 12) * 100),
+      signals.projectText
+        ? `Projects section detected. ${projectTechMentions ? 'Technologies are mentioned, but outcomes can be sharper.' : 'Technologies used are not clear enough.'}`
+        : 'Projects section is missing or too difficult to detect from the resume text.',
+      projectTechMentions
+        ? 'For each project, add problem, tech stack, API/database/auth details, deployment link, and measurable impact.'
+        : 'Your projects section does not mention technologies used. Add React, Node.js, MongoDB, APIs, deployment, and measurable impact.',
+      signals.projectText.slice(0, 160),
+    ),
+    buildSection(
+      'Experience',
+      Math.round((experienceScore / 12) * 100),
+      signals.sections.experience || signals.yearsOfExperience
+        ? `Experience signal detected${signals.yearsOfExperience ? ` with ${signals.yearsOfExperience}+ years referenced` : ''}.`
+        : 'No clear work experience or internship section was detected.',
+      'Use action verbs and add measurable responsibilities: built APIs, integrated auth, improved performance, handled users, or deployed features.',
+      signals.experienceText.slice(0, 160),
+    ),
+    buildSection(
+      'Education',
+      Math.round((educationScore / 8) * 100),
+      educationScore >= 6
+        ? `Education signal detected: ${signals.educationSignals.join(', ') || 'degree or institution details found'}.`
+        : 'Education details are thin or missing.',
+      'Include degree, institution, graduation year, CGPA if strong, and relevant coursework only when useful.',
+      signals.educationText.slice(0, 160),
+    ),
+    buildSection(
+      'ATS Optimization',
+      keywordScore * 10,
+      signals.targetKeywordMatches.length
+        ? `Matched ${signals.targetKeywordMatches.length}/${TARGET_KEYWORDS.length} target full-stack/AI keywords.`
+        : 'The resume does not contain the expected full-stack or AI developer keywords.',
+      signals.missingTargetKeywords.length
+        ? `Add truthful evidence for ${signals.missingTargetKeywords.slice(0, 8).join(', ')}.`
+        : 'Keyword coverage is strong; keep matching keywords to actual project evidence.',
+      signals.targetKeywordMatches.join(', '),
+    ),
+    buildSection(
+      'Formatting',
+      Math.round(((clarityScore + structureScore) / 8) * 100),
+      `Resume has ${signals.wordCount} words, ${signals.bulletCount} bullet lines, and ${Object.values(signals.sections).filter(Boolean).length} detected sections.`,
+      signals.wordCount < 250
+        ? 'Expand the resume with concise bullets under projects and experience; one-page resumes still need enough evidence.'
+        : 'Keep headings consistent, prefer bullets over paragraphs, and keep each bullet focused on action, technology, and outcome.',
+      '',
+    ),
+  ];
+
+  const actionableImprovements = unique([
+    ...sectionAnalysis
+      .filter(section => section.score < 75)
+      .map(section => section.recommendation),
+    signals.quantifiedMatches.length < 2 && 'Add at least 3 quantified bullets, such as "reduced API latency by 30%" or "served 500+ users".',
+    signals.githubPresent ? '' : 'Add a GitHub profile or repository links for projects that can be reviewed.',
+    signals.portfolioPresent ? '' : 'Add live deployment links for the strongest full-stack projects.',
+  ]).slice(0, 8);
 
   const bestCareerPath = recommendedRoles[0]?.role || 'Software Engineer';
+  const candidateName = signals.candidateName;
 
   return {
     atsScore,
+    overallScore: atsScore,
+    candidateName,
+    welcomeMessage: candidateName
+      ? `Welcome ${candidateName} to AFAI Resume IQ. Let's analyze your resume.`
+      : "Welcome to AFAI Resume IQ. Let's analyze your resume.",
+    scoreBreakdown,
+    sectionAnalysis,
     recommendedRoles,
     bestCareerPath,
     estimatedExperienceLevel: estimateExperienceLevel(signals.yearsOfExperience, signals.skills.length, signals.projectCount),
-    nextTechnologiesToLearn: unique(recommendedRoles.flatMap(role => role.missingSkills)).slice(0, 6),
-    portfolioImprovements: [
+    nextTechnologiesToLearn: unique([
+      ...signals.missingTargetKeywords,
+      ...recommendedRoles.flatMap(role => role.missingSkills),
+    ]).slice(0, 6),
+    portfolioImprovements: unique([
       'Add one deployed project with live URL and GitHub link',
       'Document architecture decisions and trade-offs in project descriptions',
       'Add metrics: latency reduced, users served, bugs fixed, or automation time saved',
-    ],
+    ]),
     suggestedCertifications: inferCertifications(recommendedRoles).slice(0, 4),
     topHiringCompanies: ['TCS', 'Infosys', 'Accenture', 'Deloitte', 'Amazon', 'Microsoft'].slice(0, 5),
     strengths: strengths.length ? strengths : ['Readable resume structure', 'Found career-relevant keywords'],
-    improvements,
+    weaknesses: weaknesses.length ? weaknesses : ['Resume is readable, but it can still improve evidence depth and ATS alignment.'],
+    improvements: actionableImprovements,
+    actionableImprovements,
+    missingKeywordSuggestions: signals.missingTargetKeywords,
     extractedSkills: signals.skills,
+    resumeQualitySignals: {
+      wordCount: signals.wordCount,
+      detectedSections: Object.entries(signals.sections).filter(([, present]) => present).map(([section]) => section),
+      contact: {
+        email: signals.emailPresent,
+        phone: signals.phonePresent,
+        linkedin: signals.linkedinPresent,
+        github: signals.githubPresent,
+        portfolio: signals.portfolioPresent,
+      },
+      matchedTargetKeywords: signals.targetKeywordMatches,
+      quantifiedEvidenceCount: signals.quantifiedMatches.length,
+    },
     mode: 'deterministic',
   };
 }
@@ -302,8 +657,16 @@ function normalizeRoleAnalysis(raw, fallback) {
     suggestedCertifications: Array.isArray(source.suggestedCertifications) ? source.suggestedCertifications : fallback.suggestedCertifications,
     topHiringCompanies: Array.isArray(source.topHiringCompanies) ? source.topHiringCompanies : fallback.topHiringCompanies,
     strengths: Array.isArray(source.strengths) ? source.strengths : fallback.strengths,
+    weaknesses: Array.isArray(source.weaknesses) ? source.weaknesses : fallback.weaknesses,
     improvements: Array.isArray(source.improvements) ? source.improvements : fallback.improvements,
+    actionableImprovements: Array.isArray(source.actionableImprovements) ? source.actionableImprovements : fallback.actionableImprovements,
+    missingKeywordSuggestions: Array.isArray(source.missingKeywordSuggestions) ? source.missingKeywordSuggestions : fallback.missingKeywordSuggestions,
+    sectionAnalysis: Array.isArray(source.sectionAnalysis) ? source.sectionAnalysis : fallback.sectionAnalysis,
+    scoreBreakdown: source.scoreBreakdown && typeof source.scoreBreakdown === 'object' ? source.scoreBreakdown : fallback.scoreBreakdown,
+    candidateName: typeof source.candidateName === 'string' ? source.candidateName : fallback.candidateName,
+    welcomeMessage: typeof source.welcomeMessage === 'string' ? source.welcomeMessage : fallback.welcomeMessage,
     extractedSkills: Array.isArray(source.extractedSkills) ? source.extractedSkills : fallback.extractedSkills,
+    resumeQualitySignals: source.resumeQualitySignals && typeof source.resumeQualitySignals === 'object' ? source.resumeQualitySignals : fallback.resumeQualitySignals,
     mode: source.mode || 'ai',
   };
 }
@@ -317,21 +680,50 @@ Supported roles:
 ${SUPPORTED_ROLES.map(role => `- ${role}`).join('\n')}
 
 Evaluate based on:
-- skills
-- projects
-- technologies
-- experience
-- education
-- resume keywords
-- ATS strengths
-- career fit
-- skill gaps for higher-level roles
+- contact information
+- professional summary quality
+- skills section strength
+- project details
+- work or internship experience
+- education and certifications
+- quantified achievements
+- ATS keyword match
+- grammar and clarity
+- resume length and structure
+
+Use only evidence present in the resume text. Do not invent companies, projects, metrics, certifications, links, or skills.
+Make suggestions specific to missing or weak evidence in this resume.
 
 Return ONLY valid JSON in this exact shape:
 {
   "atsScore": 82,
+  "candidateName": "Name found in resume or empty string",
+  "welcomeMessage": "Welcome Name to AFAI Resume IQ. Let's analyze your resume.",
   "estimatedExperienceLevel": "Beginner|Intermediate|Advanced",
   "bestCareerPath": "MERN Stack Developer",
+  "scoreBreakdown": {
+    "contactInformation": 8,
+    "professionalSummary": 7,
+    "skillsSection": 12,
+    "projectDetails": 8,
+    "experience": 7,
+    "education": 6,
+    "certifications": 2,
+    "quantifiedAchievements": 4,
+    "atsKeywordMatch": 7,
+    "grammarClarity": 3,
+    "lengthStructure": 3
+  },
+  "sectionAnalysis": [
+    {
+      "section": "Projects",
+      "score": 70,
+      "status": "Developing",
+      "feedback": "Specific evidence from the resume",
+      "recommendation": "Specific improvement",
+      "evidence": "Short excerpt or detected signal"
+    }
+  ],
   "recommendedRoles": [
     {
       "role": "MERN Stack Developer",
@@ -348,7 +740,10 @@ Return ONLY valid JSON in this exact shape:
   "suggestedCertifications": [],
   "topHiringCompanies": [],
   "strengths": [],
-  "improvements": []
+  "weaknesses": [],
+  "improvements": [],
+  "actionableImprovements": [],
+  "missingKeywordSuggestions": []
 }
 
 Resume text:
@@ -368,7 +763,25 @@ class ResumeAIService {
       if (gemini) {
         const model = gemini.getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-2.5-flash' });
         const result = await model.generateContent(buildPrompt(resumeText, parsedData));
-        return normalizeRoleAnalysis(parseJson(result.response.text()), fallback);
+        const normalized = normalizeRoleAnalysis(parseJson(result.response.text()), fallback);
+
+        return {
+          ...normalized,
+          atsScore: fallback.atsScore,
+          overallScore: fallback.overallScore,
+          candidateName: fallback.candidateName,
+          welcomeMessage: fallback.welcomeMessage,
+          scoreBreakdown: fallback.scoreBreakdown,
+          sectionAnalysis: fallback.sectionAnalysis,
+          strengths: fallback.strengths,
+          weaknesses: fallback.weaknesses,
+          improvements: fallback.improvements,
+          actionableImprovements: fallback.actionableImprovements,
+          missingKeywordSuggestions: fallback.missingKeywordSuggestions,
+          extractedSkills: fallback.extractedSkills,
+          resumeQualitySignals: fallback.resumeQualitySignals,
+          mode: 'ai-assisted-deterministic',
+        };
       }
     } catch (error) {
       console.warn('Resume role recommendation AI fallback:', error.message);

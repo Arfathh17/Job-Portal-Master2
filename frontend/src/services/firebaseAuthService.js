@@ -42,6 +42,14 @@ function persistBackendSession(data) {
   return data?.user || data;
 }
 
+function getStoredBackendSession() {
+  try {
+    return JSON.parse(localStorage.getItem('ai_job_portal_user') || 'null');
+  } catch {
+    return null;
+  }
+}
+
 function normalizeUser(firebaseUser, profile = {}) {
   if (!firebaseUser) return null;
 
@@ -156,7 +164,11 @@ export async function loginWithFirebase(credentials) {
     await syncLegacyBackendTokenForEmailPassword(credentials, 'login');
     return normalizeUser(credential.user, profile);
   } catch (error) {
-    throw new Error(formatFirebaseError(error, 'Login failed.'));
+    try {
+      return persistBackendSession(await loginUser(credentials));
+    } catch (apiError) {
+      throw new Error(formatApiError(apiError, formatFirebaseError(error, 'Login failed.')));
+    }
   }
 }
 
@@ -195,7 +207,7 @@ export function subscribeToFirebaseSession(callback) {
   return onAuthStateChanged(auth, async firebaseUser => {
     try {
       if (!firebaseUser) {
-        callback(null);
+        callback(getStoredBackendSession());
         return;
       }
 

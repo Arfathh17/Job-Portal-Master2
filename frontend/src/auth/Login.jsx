@@ -6,11 +6,16 @@ import { FcGoogle } from 'react-icons/fc';
 import { useAuth } from '../context/AuthContext';
 import { GlassCard, GlowButton, MaskedHeadline, MotionPage, NeonBadge } from '../components/PremiumUI';
 
+const DEMO_LOGIN = {
+  email: 'jobseeker@demo.com',
+  password: 'demo123',
+};
+
 export default function Login() {
   const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState(DEMO_LOGIN);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -106,6 +111,9 @@ export default function Login() {
             <NeonBadge><Rocket size={14} /> Welcome back</NeonBadge>
             <h2 className="afai-wordmark mt-5 overflow-hidden break-words text-3xl font-black leading-tight text-white sm:text-4xl sm:leading-none">Enter the talent atelier.</h2>
             <p className="mt-4 text-sm leading-6 text-slate-400">Continue your hiring pipeline, candidate journey, or AFAI interview session.</p>
+            <p className="mt-3 rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-3 py-2 text-xs font-bold text-emerald-100">
+              Demo candidate login is prefilled. Click Login to enter.
+            </p>
           </div>
 
           <form onSubmit={submit} className="w-full min-w-0 space-y-4 overflow-hidden">

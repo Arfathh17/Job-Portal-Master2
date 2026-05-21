@@ -300,14 +300,28 @@ ${resumeText}
 Return JSON with:
 {
   "personalInfo": {...},
-  "skills": [...],
+  "skills": {
+    "technical": [],
+    "soft": [],
+    "languages": [],
+    "tools": [],
+    "frameworks": [],
+    "databases": [],
+    "platforms": []
+  },
   "experience": [...],
   "education": [...],
   "projects": [...],
   "certifications": [...],
   "yearsOfExperience": number,
   "strengths": [...],
-  "suggestedRoles": [...]
+  "suggestedRoles": [],
+  "jobPreferences": {
+    "roles": [],
+    "location": "",
+    "workMode": "remote|hybrid|onsite|unspecified",
+    "jobTypes": []
+  }
 }`;
 
     try {

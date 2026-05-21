@@ -10,6 +10,7 @@ import AFAIInterview from './pages/AFAIInterview';
 import AFAISetup from './pages/AFAISetup';
 import AFAISummary from './pages/AFAISummary';
 import Home from './pages/Home';
+import JobDetail from './pages/JobDetail';
 import Jobs from './pages/Jobs';
 import { PremiumBackground, SmoothExperience } from './components/PremiumUI';
 
@@ -42,6 +43,10 @@ export default function App() {
           <Route
             path="/jobs"
             element={<Jobs />}
+          />
+          <Route
+            path="/jobs/:id"
+            element={<JobDetail />}
           />
           <Route
             path="/resume-analyzer"

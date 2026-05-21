@@ -4,7 +4,7 @@ import { GlassCard } from '../components/PremiumUI';
 function ProgressBar({ value }) {
   const width = Math.max(0, Math.min(100, Number(value) || 0));
   return (
-    <div className="h-2 rounded-full bg-slate-800">
+    <div className="h-2 overflow-hidden rounded-full bg-slate-800">
       <div className="h-2 rounded-full bg-gradient-to-r from-violet-300 to-fuchsia-200 shadow-[0_10px_24px_rgba(109,40,217,0.12)]" style={{ width: `${width}%` }} />
     </div>
   );
@@ -12,9 +12,9 @@ function ProgressBar({ value }) {
 
 export default function RoleCard({ recommendation }) {
   return (
-    <GlassCard className="luxury-table-row p-4" hover={false}>
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-        <div className="flex items-start gap-3 min-w-0">
+    <GlassCard className="luxury-table-row overflow-hidden p-4" hover={false}>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/80 text-violet-700">
             <Briefcase size={20} />
           </span>
@@ -40,12 +40,12 @@ export default function RoleCard({ recommendation }) {
         </div>
       )}
 
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
+      <div className="mt-4 grid min-w-0 gap-4 md:grid-cols-2">
         <div>
           <p className="text-xs sm:text-sm font-black text-white">Missing skills</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {(recommendation.missingSkills || []).slice(0, 5).map(skill => (
-              <span key={skill} className="rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1 text-xs font-bold text-amber-100">
+              <span key={skill} className="max-w-full rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1 text-xs font-bold text-amber-100 break-words">
                 {skill}
               </span>
             ))}

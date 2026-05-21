@@ -45,33 +45,33 @@ export default function Register() {
   };
 
   return (
-    <MotionPage className="grid min-h-screen place-items-center px-4 py-6 sm:px-6 md:px-10">
-      <div className="grid w-full max-w-7xl gap-5 lg:grid-cols-[minmax(360px,470px)_minmax(0,1.24fr)]">
-        <GlassCard className="mx-auto flex w-full max-w-md max-w-full flex-col justify-center p-6 sm:p-8 lg:max-w-none" hover={false}>
+    <MotionPage className="grid min-h-screen place-items-center overflow-hidden px-4 py-6 sm:px-6 lg:px-8">
+      <div className="grid w-full min-w-0 max-w-7xl gap-5 overflow-hidden lg:grid-cols-[minmax(320px,470px)_minmax(0,1.24fr)]">
+        <GlassCard className="mx-auto flex w-full max-w-md flex-col justify-center overflow-hidden p-5 sm:p-8 lg:max-w-none" hover={false}>
           <NeonBadge><BadgeCheck size={14} /> Start premium access</NeonBadge>
           <h1 className="afai-wordmark mt-5 overflow-hidden break-words text-3xl font-black leading-tight text-white sm:text-4xl sm:leading-none">Claim your workflow.</h1>
           <p className="mt-4 text-sm leading-6 text-slate-400">Choose the workspace that matches your side of the platform.</p>
 
-          <form onSubmit={submit} className="mt-7 space-y-4">
+          <form onSubmit={submit} className="mt-7 w-full min-w-0 space-y-4 overflow-hidden">
             <label className="block space-y-2">
               <span className="text-sm font-semibold text-slate-300">Name</span>
-              <div className="relative">
+              <div className="relative w-full min-w-0 overflow-hidden">
                 <UserRound className="absolute left-3 top-3.5 text-violet-500/80" size={18} />
-                <input name="name" value={form.name} onChange={update} className="field pl-10" required />
+                <input name="name" value={form.name} onChange={update} className="field box-border w-full pl-10" required />
               </div>
             </label>
             <label className="block space-y-2">
               <span className="text-sm font-semibold text-slate-300">Email</span>
-              <div className="relative">
+              <div className="relative w-full min-w-0 overflow-hidden">
                 <Mail className="absolute left-3 top-3.5 text-violet-500/80" size={18} />
-                <input name="email" type="email" value={form.email} onChange={update} className="field pl-10" required />
+                <input name="email" type="email" value={form.email} onChange={update} className="field box-border w-full pl-10" required />
               </div>
             </label>
             <label className="block space-y-2">
               <span className="text-sm font-semibold text-slate-300">Password</span>
-              <div className="relative">
+              <div className="relative w-full min-w-0 overflow-hidden">
                 <LockKeyhole className="absolute left-3 top-3.5 text-violet-500/80" size={18} />
-                <input name="password" type={showPassword ? 'text' : 'password'} minLength={6} value={form.password} onChange={update} className="field px-10" required />
+                <input name="password" type={showPassword ? 'text' : 'password'} minLength={6} value={form.password} onChange={update} className="field box-border w-full px-10" required />
                 <button type="button" onClick={() => setShowPassword(prev => !prev)} className="absolute right-3 top-3.5 text-slate-400 transition hover:text-white" aria-label="Toggle password visibility">
                   <Eye size={18} />
                 </button>
@@ -79,7 +79,7 @@ export default function Register() {
             </label>
             <label className="block space-y-2">
               <span className="text-sm font-semibold text-slate-300">Account type</span>
-              <select name="role" value={form.role} onChange={update} className="field">
+              <select name="role" value={form.role} onChange={update} className="field box-border w-full">
                 <option value="candidate">Candidate</option>
                 <option value="recruiter">Recruiter</option>
               </select>
@@ -139,7 +139,7 @@ export default function Register() {
             </div>
           </div>
           <div className="relative z-10 mt-8 grid gap-4 sm:grid-cols-2">
-            {['Candidate Dashboard', 'Recruiter Workspace', 'Resume Analyzer', 'AFAI Interview Simulator'].map((item, index) => (
+            {['Candidate Dashboard', 'Recruiter Workspace', 'ResumeIQ', 'AFAI Interview Simulator'].map((item, index) => (
               <div key={item} className="luxury-table-row premium-card flex items-center justify-between p-4">
                 <span className="font-semibold">{item}</span>
                 <span className="text-sm font-black text-slate-400">0{index + 1}</span>

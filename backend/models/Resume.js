@@ -112,6 +112,20 @@ const ResumeSchema = new mongoose.Schema({
       salaryTrend: String,
       recommendedLearning: [String]
     }],
+    jobRecommendations: [{
+      id: String,
+      title: String,
+      company: String,
+      location: String,
+      type: String,
+      source: String,
+      applyLink: String,
+      description: String,
+      salary: mongoose.Schema.Types.Mixed,
+      skills: [String],
+      matchPercentage: Number,
+      matchedSkills: [String]
+    }],
     bestCareerPath: String,
     nextTechnologiesToLearn: [String],
     portfolioImprovements: [String],

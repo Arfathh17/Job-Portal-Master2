@@ -3,6 +3,8 @@
  * Verifies JWT tokens and attaches user info to the request
  */
 const jwt = require('jsonwebtoken');
+require('../config/firebaseAdmin');
+const firebaseAdmin = require('firebase-admin');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'ai-job-portal-dev-secret-key-2024';
 
@@ -17,7 +19,24 @@ const normalizeRole = role => roleAliases[role] || role;
  * Middleware: Require authentication
  * Extracts and verifies the Bearer token from the Authorization header
  */
-const verifyToken = (req, res, next) => {
+async function verifyFirebaseToken(token) {
+  if (!firebaseAdmin.apps.length) return null;
+
+  try {
+    const decoded = await firebaseAdmin.auth().verifyIdToken(token);
+    return {
+      id: decoded.uid,
+      uid: decoded.uid,
+      email: decoded.email,
+      role: normalizeRole(decoded.role || 'candidate'),
+      authProvider: 'firebase',
+    };
+  } catch {
+    return null;
+  }
+}
+
+const verifyToken = async (req, res, next) => {
   try {
     const header = req.headers.authorization;
     if (!header || !header.startsWith('Bearer ')) {
@@ -25,9 +44,19 @@ const verifyToken = (req, res, next) => {
     }
 
     const token = header.split(' ')[1];
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = { ...decoded, role: normalizeRole(decoded.role) };
-    next();
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      req.user = { ...decoded, role: normalizeRole(decoded.role), authProvider: 'jwt' };
+      return next();
+    } catch {
+      const firebaseUser = await verifyFirebaseToken(token);
+      if (firebaseUser) {
+        req.user = firebaseUser;
+        return next();
+      }
+
+      return res.status(401).json({ error: 'Invalid or expired token.' });
+    }
   } catch (err) {
     return res.status(401).json({ error: 'Invalid or expired token.' });
   }

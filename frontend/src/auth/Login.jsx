@@ -49,8 +49,8 @@ export default function Login() {
   };
 
   return (
-    <MotionPage className="grid min-h-screen place-items-center px-4 py-6 sm:px-6 md:px-10">
-      <div className="grid w-full max-w-7xl gap-5 lg:grid-cols-[minmax(0,1.24fr)_minmax(360px,470px)]">
+    <MotionPage className="grid min-h-screen place-items-center overflow-hidden px-4 py-6 sm:px-6 lg:px-8">
+      <div className="grid w-full min-w-0 max-w-7xl gap-5 overflow-hidden lg:grid-cols-[minmax(0,1.24fr)_minmax(320px,470px)]">
         <section className="cinematic-stage image-reveal hidden min-h-[720px] max-w-full flex-col justify-between rounded-[2rem] p-7 lg:flex xl:p-10">
           <div className="relative z-10">
             <NeonBadge><Sparkles size={14} /> AFAI talent intelligence</NeonBadge>
@@ -101,26 +101,26 @@ export default function Login() {
           </div>
         </section>
 
-        <GlassCard className="mx-auto flex w-full max-w-md max-w-full flex-col justify-center p-6 sm:p-8 lg:max-w-none" hover={false}>
+        <GlassCard className="mx-auto flex w-full max-w-md flex-col justify-center overflow-hidden p-5 sm:p-8 lg:max-w-none" hover={false}>
           <div className="mb-7">
             <NeonBadge><Rocket size={14} /> Welcome back</NeonBadge>
             <h2 className="afai-wordmark mt-5 overflow-hidden break-words text-3xl font-black leading-tight text-white sm:text-4xl sm:leading-none">Enter the talent atelier.</h2>
             <p className="mt-4 text-sm leading-6 text-slate-400">Continue your hiring pipeline, candidate journey, or AFAI interview session.</p>
           </div>
 
-          <form onSubmit={submit} className="space-y-4">
+          <form onSubmit={submit} className="w-full min-w-0 space-y-4 overflow-hidden">
             <label className="block space-y-2">
               <span className="text-sm font-semibold text-slate-300">Email</span>
-              <div className="relative">
+              <div className="relative w-full min-w-0 overflow-hidden">
                 <Mail className="absolute left-3 top-3.5 text-violet-500/80" size={18} />
-                <input name="email" type="email" value={form.email} onChange={update} className="field pl-10" required />
+                <input name="email" type="email" value={form.email} onChange={update} className="field box-border w-full pl-10" required />
               </div>
             </label>
             <label className="block space-y-2">
               <span className="text-sm font-semibold text-slate-300">Password</span>
-              <div className="relative">
+              <div className="relative w-full min-w-0 overflow-hidden">
                 <LockKeyhole className="absolute left-3 top-3.5 text-violet-500/80" size={18} />
-                <input name="password" type={showPassword ? 'text' : 'password'} value={form.password} onChange={update} className="field px-10" required />
+                <input name="password" type={showPassword ? 'text' : 'password'} value={form.password} onChange={update} className="field box-border w-full px-10" required />
                 <button type="button" onClick={() => setShowPassword(prev => !prev)} className="absolute right-3 top-3.5 text-slate-400 transition hover:text-white" aria-label="Toggle password visibility">
                   <Eye size={18} />
                 </button>

@@ -1,4 +1,3 @@
-const { OpenAI } = require('openai');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const SUPPORTED_ROLES = [
@@ -79,11 +78,6 @@ function isUsableKey(key) {
   return typeof key === 'string'
     && key.trim().length > 20
     && !/your_|replace|placeholder|example/i.test(key);
-}
-
-function getOpenAIClient() {
-  if (!isUsableKey(process.env.OPENAI_API_KEY)) return null;
-  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 }
 
 function getGeminiClient() {
@@ -370,19 +364,6 @@ class ResumeAIService {
     const fallback = deterministicRoleRecommendations(resumeText, parsedData);
 
     try {
-      const openai = getOpenAIClient();
-      if (openai) {
-        const response = await openai.chat.completions.create({
-          model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-          temperature: 0.35,
-          messages: [
-            { role: 'system', content: 'Return valid JSON only. Do not include markdown.' },
-            { role: 'user', content: buildPrompt(resumeText, parsedData) },
-          ],
-        });
-        return normalizeRoleAnalysis(parseJson(response.choices[0]?.message?.content), fallback);
-      }
-
       const gemini = getGeminiClient();
       if (gemini) {
         const model = gemini.getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-2.5-flash' });

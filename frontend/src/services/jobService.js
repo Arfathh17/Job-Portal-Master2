@@ -2,7 +2,10 @@ import api from './api';
 
 export async function fetchJobs(params = {}) {
   const { data } = await api.get('/jobs/all', { params });
-  return data.jobs || data;
+  return {
+    jobs: Array.isArray(data?.jobs) ? data.jobs : Array.isArray(data) ? data : [],
+    meta: data?.meta || {},
+  };
 }
 
 export async function fetchRemoteJobs(params = {}) {

@@ -2,7 +2,7 @@ const express = require('express');
 
 const { getIsConnected } = require('../config/db');
 const { auth, authorizeRoles } = require('../middleware/auth');
-const { fetchIndiaJobs } = require('../services/jsearchJobService');
+const { fetchIndiaJobs } = require('../services/adzunaJobService');
 const { fetchRemoteJobs } = require('../services/remotiveJobService');
 const {
   addApplication: addManualApplication,
@@ -26,6 +26,10 @@ function getJobModel() {
 
 function getApplicationModel() {
   return require('../models/Application');
+}
+
+function getSavedJobModel() {
+  return require('../models/SavedJob');
 }
 
 function buildJobQuery(query) {
@@ -61,11 +65,17 @@ function getFilters(query = {}) {
     type: query.type || '',
     remote: query.remote,
     limit: query.limit,
+    page: query.page,
   };
 }
 
 function sortJobs(jobs) {
-  return jobs.sort((a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0));
+  const sourceRank = { adzuna: 0, manual: 1, remotive: 2 };
+  return jobs.sort((a, b) => {
+    const sourceDelta = (sourceRank[a?.source] ?? 10) - (sourceRank[b?.source] ?? 10);
+    if (sourceDelta) return sourceDelta;
+    return new Date(b?.createdAt || b?.created || 0) - new Date(a?.createdAt || a?.created || 0);
+  });
 }
 
 function normalizeDuplicateValue(value = '') {
@@ -93,13 +103,33 @@ function removeDuplicateJobs(jobs) {
   });
 }
 
-function buildCombinedResponse(results, filters, errors) {
+function buildCombinedResponse(results, filters, errors, meta = {}) {
   try {
-    const filteredJobs = applyCombinedFilters(removeDuplicateJobs(results), filters);
-    return { jobs: sortJobs(filteredJobs), errors };
+    const uniqueJobs = removeDuplicateJobs(results);
+    const filteredJobs = applyCombinedFilters(uniqueJobs, filters);
+
+    if (!filteredJobs.length && shouldUseRegionalFallback(filters, errors)) {
+      const fallbackJobs = applyCombinedFilters(uniqueJobs, getRegionalFallbackFilters(filters));
+      return { jobs: sortJobs(fallbackJobs), errors, meta };
+    }
+
+    const remotiveFallbackJobs = getRemotiveRegionalFallbackJobs(uniqueJobs, filters, meta);
+    if (!filteredJobs.length && remotiveFallbackJobs.length) {
+      return {
+        jobs: sortJobs(remotiveFallbackJobs),
+        errors,
+        meta: {
+          ...meta,
+          fallback: 'remotive-location',
+          message: 'Showing available remote jobs for this location',
+        },
+      };
+    }
+
+    return { jobs: sortJobs(filteredJobs), errors, meta };
   } catch (error) {
     console.error('Combined jobs normalization error:', error.message || error);
-    return { jobs: sortJobs(removeDuplicateJobs(results)), errors: [...errors, 'normalize'] };
+    return { jobs: sortJobs(removeDuplicateJobs(results)), errors: [...errors, 'normalize'], meta };
   }
 }
 
@@ -136,12 +166,28 @@ function normalizeLocationValue(value = '') {
     .trim();
 }
 
+function getJobLocation(job = {}) {
+  return job.location
+    || job.job_location
+    || job.city
+    || job.companyLocation
+    || job.company_location
+    || job.job_city
+    || job.candidate_required_location
+    || job.job_country
+    || '';
+}
+
 function getJobLocationValues(job = {}) {
   return [
+    getJobLocation(job),
     job.location,
-    job.city,
-    job.country,
     job.job_location,
+    job.city,
+    job.companyLocation,
+    job.company_location,
+    job.candidate_required_location,
+    job.country,
     job.job_city,
     job.job_country,
     job.job_state,
@@ -162,7 +208,47 @@ function isIndiaJob(job) {
 
 function isBangaloreJob(job) {
   const values = getJobLocationValues(job);
-  return includesAnyLocation(values, ['bangalore', 'bengaluru', 'karnataka', 'remote india']);
+  return includesAnyLocation(values, ['bangalore', 'bengaluru', 'karnataka']);
+}
+
+function isRegionalSearch(value = '') {
+  return /\b(india|bangalore|bengaluru|karnataka)\b/i.test(String(value || ''));
+}
+
+function isBangaloreScope(value = '') {
+  return /\b(bangalore|bengaluru|karnataka)\b/i.test(String(value || ''));
+}
+
+function shouldUseRegionalFallback(filters = {}, errors = []) {
+  if (!errors.includes('adzuna')) return false;
+  if (isRegionalSearch(filters.source) || isRegionalSearch(filters.region) || isRegionalSearch(filters.location)) {
+    return false;
+  }
+
+  return [
+    filters.source,
+    filters.region,
+    filters.location,
+    filters.country,
+    filters.keyword,
+    filters.search,
+  ].some(isRegionalSearch);
+}
+
+function getRegionalFallbackFilters(filters = {}) {
+  const fallbackFilters = {
+    ...filters,
+    source: '',
+    region: '',
+    location: '',
+    country: '',
+    remote: undefined,
+  };
+
+  if (isRegionalSearch(fallbackFilters.keyword)) fallbackFilters.keyword = '';
+  if (isRegionalSearch(fallbackFilters.search)) fallbackFilters.search = '';
+
+  return fallbackFilters;
 }
 
 function matchesRequestedLocation(job, requestedLocation) {
@@ -173,6 +259,47 @@ function matchesRequestedLocation(job, requestedLocation) {
   if (['bangalore', 'bengaluru', 'karnataka'].includes(location)) return isBangaloreJob(job);
 
   return includesAnyLocation(getJobLocationValues(job), [location]);
+}
+
+function getRegionalFallbackTerms(filters = {}) {
+  const regionText = [
+    filters.source,
+    filters.region,
+    filters.location,
+    filters.country,
+  ].map(normalizeLocationValue).join(' ');
+
+  if (/\b(bangalore|karnataka)\b/.test(regionText)) {
+    return ['bangalore', 'bengaluru', 'india'];
+  }
+
+  if (/\b(india|in)\b/.test(regionText)) {
+    return ['india', 'bangalore', 'bengaluru'];
+  }
+
+  return [];
+}
+
+function matchesRemotiveRegionalFallback(job, terms) {
+  if (job.source !== 'remotive') return false;
+
+  const haystack = [
+    job.location,
+    job.candidate_required_location,
+    job.title,
+    job.description,
+  ].map(normalizeLocationValue).join(' ');
+
+  return terms.some(term => haystack.includes(normalizeLocationValue(term)));
+}
+
+function getRemotiveRegionalFallbackJobs(jobs, filters, meta = {}) {
+  if (!meta.adzunaUnavailable) return [];
+
+  const terms = getRegionalFallbackTerms(filters);
+  if (!terms.length) return [];
+
+  return jobs.filter(job => matchesRemotiveRegionalFallback(job, terms));
 }
 
 function validateManualJob(body) {
@@ -200,6 +327,32 @@ function normalizeCreatePayload(body, user) {
   };
 }
 
+function requireMongoForSavedJobs(res) {
+  if (getIsConnected()) return false;
+  res.status(503).json({ error: 'Saved jobs require MongoDB. Please connect the database and try again.' });
+  return true;
+}
+
+function normalizeSavedJobPayload(body = {}) {
+  const job = body.job && typeof body.job === 'object' ? body.job : body;
+  const externalId = String(job._id || job.externalId || job.id || body.externalId || '').trim();
+
+  return {
+    externalId,
+    title: job.title || job.job_title || '',
+    company: job.company || job.employer_name || '',
+    location: job.location || job.job_location || job.candidate_required_location || '',
+    salary: job.salary || job.salaryText || 'Not disclosed',
+    description: job.description || job.job_description || '',
+    applyLink: job.applyLink || job.url || job.redirect_url || job.job_apply_link || '',
+    url: job.url || job.applyLink || job.redirect_url || job.job_apply_link || '',
+    source: job.source || 'manual',
+    type: job.type || 'full-time',
+    remote: Boolean(job.remote),
+    jobSnapshot: job,
+  };
+}
+
 function applyCombinedFilters(jobs, filters) {
   const keyword = String(filters.keyword || filters.search || '').trim().toLowerCase();
   const type = String(filters.type || '').trim();
@@ -208,12 +361,12 @@ function applyCombinedFilters(jobs, filters) {
   const region = String(filters.region || '').trim().toLowerCase();
   const location = String(filters.location || '').trim().toLowerCase();
   const country = String(filters.country || '').trim().toLowerCase();
-  const sourceFilters = new Set(['manual', 'remotive', 'jsearch']);
+  const sourceFilters = new Set(['manual', 'remotive', 'adzuna']);
 
   return jobs.filter(job => {
     if (sourceFilters.has(source) && job.source !== source) return false;
     if ((source === 'india' || region === 'india' || country === 'india' || country === 'in') && !isIndiaJob(job)) return false;
-    if ((source === 'bangalore' || region === 'bangalore') && !isBangaloreJob(job)) return false;
+    if ((isBangaloreScope(source) || isBangaloreScope(region)) && !isBangaloreJob(job)) return false;
     if (location && !matchesRequestedLocation(job, location)) return false;
     if (type && job.type !== type) return false;
     if (remote !== undefined && remote !== '' && String(job.remote) !== String(remote)) return false;
@@ -235,11 +388,12 @@ async function fetchCombinedJobs(query) {
   const source = String(filters.source || 'all').toLowerCase();
   const region = String(filters.region || '').toLowerCase();
   const location = String(filters.location || '').toLowerCase();
-  const isIndiaScope = source === 'india' || source === 'bangalore' || region === 'india' || region === 'bangalore'
-    || location.includes('india') || location.includes('bangalore') || location.includes('bengaluru');
+  const isBangaloreRequest = isBangaloreScope(source) || isBangaloreScope(region) || isBangaloreScope(location);
+  const isIndiaScope = source === 'india' || isBangaloreRequest || region === 'india'
+    || location.includes('india');
   const shouldFetchManual = source === 'all' || source === 'manual' || isIndiaScope;
-  const shouldFetchRemote = source === 'all' || source === 'remotive' || source === 'remote';
-  const shouldFetchIndia = source === 'all' || source === 'jsearch' || isIndiaScope;
+  const shouldFetchRemote = source === 'all' || source === 'remotive' || source === 'remote' || isIndiaScope;
+  const shouldFetchIndia = source === 'all' || source === 'adzuna' || isIndiaScope;
   const errors = [];
   const providers = [];
 
@@ -256,16 +410,22 @@ async function fetchCombinedJobs(query) {
   }
 
   if (shouldFetchIndia) {
-    providers.push(runJobProvider('jsearch', fetchIndiaJobs({
+    providers.push(runJobProvider('adzuna', fetchIndiaJobs({
         keyword: filters.keyword,
         type: filters.type,
-        location: source === 'bangalore' || region === 'bangalore' ? 'Bangalore' : filters.location || 'India',
+        location: isBangaloreRequest ? 'Bengaluru' : filters.location || 'India',
         limit: filters.limit || 30,
+        page: filters.page || 1,
       }), errors, 18000));
   }
 
   const results = (await Promise.all(providers)).flat();
-  return buildCombinedResponse(results, filters, errors);
+  const hasAdzunaResults = results.some(job => job.source === 'adzuna');
+  const meta = {
+    adzunaUnavailable: shouldFetchIndia && (errors.includes('adzuna') || !hasAdzunaResults),
+  };
+
+  return buildCombinedResponse(results, filters, errors, meta);
 }
 
 router.get('/remote', async (req, res) => {
@@ -294,26 +454,22 @@ router.get('/search', async (req, res) => {
 
 router.get('/india', async (req, res) => {
   try {
-    const jobs = await fetchIndiaJobs({
-      keyword: req.query.keyword || req.query.search,
-      type: req.query.type,
-      location: req.query.location || req.query.region || 'Bangalore',
-      limit: req.query.limit || 30,
-    });
-    return res.json({ success: true, jobs });
+    const filters = getFilters({ ...req.query, source: 'india' });
+    const { jobs, errors, meta } = await fetchCombinedJobs(filters);
+    return res.json({ success: true, jobs, meta: { sources: ['adzuna', 'remotive'], errors, ...meta } });
   } catch (error) {
-    console.error('JSearch India jobs error:', error.message || error);
+    console.error('Adzuna India jobs error:', error.message || error);
     const statusCode = error.statusCode || 502;
     return res.status(statusCode).json({
-      error: statusCode === 503 ? error.message : 'Failed to fetch India jobs from JSearch.',
+      error: statusCode === 503 ? error.message : 'Failed to fetch India jobs from Adzuna.',
     });
   }
 });
 
 router.get('/all', async (req, res) => {
   try {
-    const { jobs, errors } = await fetchCombinedJobs(req.query);
-    return res.json({ success: true, jobs, meta: { sources: ['manual', 'remotive', 'jsearch'], errors } });
+    const { jobs, errors, meta } = await fetchCombinedJobs(req.query);
+    return res.json({ success: true, jobs, meta: { sources: ['manual', 'adzuna', 'remotive'], errors, ...meta } });
   } catch (error) {
     console.error('Combined jobs error:', error);
     return res.status(500).json({ error: 'Failed to fetch jobs.' });
@@ -322,8 +478,8 @@ router.get('/all', async (req, res) => {
 
 router.get('/', async (req, res) => {
   try {
-    const { jobs, errors } = await fetchCombinedJobs(req.query);
-    return res.json({ success: true, jobs, meta: { sources: ['manual', 'remotive', 'jsearch'], errors } });
+    const { jobs, errors, meta } = await fetchCombinedJobs(req.query);
+    return res.json({ success: true, jobs, meta: { sources: ['manual', 'adzuna', 'remotive'], errors, ...meta } });
   } catch (error) {
     console.error('Get jobs error:', error);
     return res.status(500).json({ error: 'Failed to fetch jobs.' });
@@ -381,6 +537,60 @@ router.get('/applications/recruiter', auth, authorizeRoles('recruiter', 'admin')
   } catch (error) {
     console.error('Get recruiter applications error:', error);
     return res.status(500).json({ error: 'Failed to fetch applications.' });
+  }
+});
+
+router.get('/saved', auth, async (req, res) => {
+  try {
+    if (requireMongoForSavedJobs(res)) return;
+
+    const savedJobs = await getSavedJobModel()
+      .find({ user: req.user.id })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.json({ success: true, jobs: savedJobs });
+  } catch (error) {
+    console.error('Get saved jobs error:', error);
+    return res.status(500).json({ error: 'Failed to fetch saved jobs.' });
+  }
+});
+
+router.post('/saved', auth, async (req, res) => {
+  try {
+    if (requireMongoForSavedJobs(res)) return;
+
+    const payload = normalizeSavedJobPayload(req.body);
+    if (!payload.externalId) {
+      return res.status(400).json({ error: 'Job id is required to save a job.' });
+    }
+
+    const savedJob = await getSavedJobModel().findOneAndUpdate(
+      { user: req.user.id, externalId: payload.externalId },
+      { $set: { ...payload, user: req.user.id } },
+      { new: true, upsert: true, setDefaultsOnInsert: true },
+    );
+
+    return res.status(201).json({ success: true, job: savedJob });
+  } catch (error) {
+    console.error('Save job error:', error);
+    return res.status(500).json({ error: 'Failed to save job.' });
+  }
+});
+
+router.delete('/saved/:externalId', auth, async (req, res) => {
+  try {
+    if (requireMongoForSavedJobs(res)) return;
+
+    await getSavedJobModel().deleteOne({
+      user: req.user.id,
+      externalId: req.params.externalId,
+    });
+
+    return res.json({ success: true, message: 'Job removed from saved jobs.' });
+  } catch (error) {
+    console.error('Unsave job error:', error);
+    return res.status(500).json({ error: 'Failed to remove saved job.' });
   }
 });
 

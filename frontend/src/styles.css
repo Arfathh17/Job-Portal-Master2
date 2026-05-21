@@ -18,12 +18,14 @@
 
   html {
     scroll-behavior: smooth;
+    width: 100%;
     max-width: 100%;
     overflow-x: hidden;
   }
 
   body {
     margin: 0;
+    width: 100%;
     min-height: 100vh;
     overflow-x: hidden;
     background: #fbfaff;
@@ -32,6 +34,7 @@
   }
 
   #root {
+    width: 100%;
     min-height: 100vh;
     max-width: 100%;
     overflow-x: hidden;
@@ -69,6 +72,8 @@
   .field {
     width: 100%;
     max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     border-radius: 0.95rem;
     border: 1px solid rgba(167, 139, 250, 0.22);
     background: rgba(255, 255, 255, 0.82);
@@ -325,6 +330,15 @@
     overflow-wrap: break-word;
   }
 
+  input,
+  textarea,
+  select {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
   .masked-word {
     display: inline-block;
     max-width: 100%;
@@ -559,7 +573,8 @@
   }
 
   .field {
-    padding: 0.75rem 0.875rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
   }
 
   .product-sculpture {
@@ -596,8 +611,20 @@
   }
 
   .field {
-    padding: 0.7rem 0.8rem;
+    padding-top: 0.7rem;
+    padding-bottom: 0.7rem;
     font-size: 16px;
+  }
+
+  .primary-action,
+  .contrast-action,
+  .soft-action,
+  form > button:not([aria-label]),
+  form .primary-action {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    justify-content: center;
   }
 
   .product-sculpture {
@@ -628,7 +655,8 @@
   }
 
   .field {
-    padding: 0.65rem 0.75rem;
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
     border-radius: 0.8rem;
     font-size: 16px;
   }

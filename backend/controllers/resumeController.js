@@ -6,7 +6,8 @@
 const Resume = require('../models/Resume');
 const User = require('../models/user');
 const QuestionBank = require('../models/QuestionBank');
-const aiFactory = require('../services/ai/aiFactory');
+const geminiService = require('../services/ai/geminiService');
+const { recommendJobs } = require('../services/jobRecommendationService');
 const resumeAIService = require('../services/resumeAIService');
 const { getIsConnected } = require('../config/db');
 const pdfParse = require('pdf-parse');
@@ -44,10 +45,11 @@ class ResumeController {
         return res.status(400).json({ error: 'Unsupported file format. Please upload PDF or TXT.' });
       }
 
-      // Parse resume using AI
-      const parsedData = await aiFactory.parseResume(resumeText);
+      // Parse resume using Gemini only for recommendation signals.
+      const parsedData = this.normalizeParsedResume(await geminiService.parseResume(resumeText));
 
       const roleAnalysis = await resumeAIService.analyzeResumeForRoles(resumeText, parsedData);
+      const jobRecommendations = await recommendJobs(parsedData, resumeText);
 
       // Create resume document
       const resume = new Resume({
@@ -80,6 +82,7 @@ class ResumeController {
           weakAreas: roleAnalysis.improvements || [],
           recommendedRoles: roleAnalysis.recommendedRoles.map(item => item.role),
           roleRecommendations: roleAnalysis.recommendedRoles,
+          jobRecommendations,
           bestCareerPath: roleAnalysis.bestCareerPath,
           nextTechnologiesToLearn: roleAnalysis.nextTechnologiesToLearn,
           portfolioImprovements: roleAnalysis.portfolioImprovements,
@@ -116,6 +119,7 @@ class ResumeController {
         resumeId: resume._id,
         analysis: resume.analysis,
         roleRecommendations: roleAnalysis.recommendedRoles,
+        jobRecommendations,
         bestCareerPath: roleAnalysis.bestCareerPath,
         estimatedExperienceLevel: roleAnalysis.estimatedExperienceLevel,
         nextTechnologiesToLearn: roleAnalysis.nextTechnologiesToLearn,
@@ -150,12 +154,13 @@ class ResumeController {
 
       let parsedData = {};
       try {
-        parsedData = await aiFactory.parseResume(resumeText);
+        parsedData = this.normalizeParsedResume(await geminiService.parseResume(resumeText));
       } catch (error) {
         parsedData = this.parseResumeFallback(resumeText);
       }
 
       const roleAnalysis = await resumeAIService.analyzeResumeForRoles(resumeText, parsedData);
+      const jobRecommendations = await recommendJobs(parsedData, resumeText);
 
       return res.json({
         success: true,
@@ -168,6 +173,7 @@ class ResumeController {
         strengths: roleAnalysis.strengths || [],
         improvements: roleAnalysis.improvements || [],
         recommendedRoles: roleAnalysis.recommendedRoles,
+        jobRecommendations,
         bestCareerPath: roleAnalysis.bestCareerPath,
         estimatedExperienceLevel: roleAnalysis.estimatedExperienceLevel,
         nextTechnologiesToLearn: roleAnalysis.nextTechnologiesToLearn,
@@ -191,6 +197,40 @@ class ResumeController {
       yearsOfExperience: Number(resumeText.match(/(\d+)\+?\s*years?/i)?.[1] || 0),
       strengths: skills.length ? ['Technical skills detected'] : [],
       suggestedRoles: [],
+    };
+  }
+
+  normalizeParsedResume(parsedData = {}) {
+    const skills = parsedData.skills || {};
+    const normalizedSkills = Array.isArray(skills)
+      ? {
+        technical: skills,
+        soft: [],
+        languages: [],
+        tools: [],
+        frameworks: [],
+        databases: [],
+        platforms: [],
+      }
+      : {
+        technical: skills.technical || [],
+        soft: skills.soft || [],
+        languages: skills.languages || [],
+        tools: skills.tools || [],
+        frameworks: skills.frameworks || [],
+        databases: skills.databases || [],
+        platforms: skills.platforms || [],
+      };
+
+    return {
+      ...parsedData,
+      skills: normalizedSkills,
+      jobPreferences: parsedData.jobPreferences || {
+        roles: parsedData.suggestedRoles || parsedData.preferredRoles || [],
+        location: parsedData.personalInfo?.location || parsedData.location || '',
+        workMode: 'unspecified',
+        jobTypes: [],
+      },
     };
   }
 
@@ -228,7 +268,7 @@ Questions should probe their technical knowledge of skills mentioned.
 Return JSON array with: [{ question: "...", category: "technical", relevance: "high" }]`;
 
         try {
-          const generatedQs = await aiFactory.generateQuestions({
+          const generatedQs = await geminiService.generateQuestions({
             role: roles[0],
             difficulty: resume.analysis.seniorityLevel === 'entry-level' ? 'beginner' : 'intermediate',
             category: 'technical',

@@ -10,24 +10,19 @@ const socketIO = require('socket.io');
 const path = require('path');
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const { connectDB } = require('./config/db');
 const { processChatbotMessage } = require('./services/chatbot');
 
 const app = express();
-const server = http.createServer(app);
-
-// Socket.io setup with loose CORS for development
-const io = socketIO(server, {
-  cors: {
-    origin: '*', // Allow all origins to avoid websocket connection errors
-    methods: ['GET', 'POST'],
-  },
-});
 
 // ─── Middleware ─────────────────────────────────────────────────────────────────
-app.use(cors());
+// CORS — allow the frontend origins (set your deployed frontend URL)
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -51,28 +46,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ─── Socket.io — Real-time Chat ────────────────────────────────────────────────
-io.on('connection', (socket) => {
-  console.log('🔌 New client connected:', socket.id);
-
-  socket.on('chat message', async (msg) => {
-    try {
-      const response = await processChatbotMessage(msg);
-      socket.emit('bot reply', response);
-    } catch (err) {
-      console.error('Socket chat error:', err);
-      socket.emit('bot reply', {
-        message: 'Sorry, something went wrong. Please try again.',
-        error: true,
-      });
-    }
-  });
-
-  socket.on('disconnect', () => {
-    console.log('🔌 Client disconnected:', socket.id);
-  });
-});
-
 // ─── Global Error Handler ──────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
@@ -93,9 +66,41 @@ const startServer = async () => {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
 
-  server.listen(PORT, '0.0.0.0', () => {
+  // Start the HTTP server and attach socket.io
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`\n🚀 AI Job Portal Backend running on port ${PORT}`);
-    console.log(`   API Health: http://localhost:${PORT}/api/health\n`);
+    console.log(`Server running on port ${PORT}`);
+    console.log('   API Health endpoint: /api/health\n');
+  });
+
+  const io = socketIO(server, {
+    cors: {
+      origin: 'http://localhost:5173',
+      methods: ['GET', 'POST'],
+      credentials: true,
+    },
+  });
+
+  // ─── Socket.io — Real-time Chat ────────────────────────────────────────────────
+  io.on('connection', (socket) => {
+    console.log('🔌 New client connected:', socket.id);
+
+    socket.on('chat message', async (msg) => {
+      try {
+        const response = await processChatbotMessage(msg);
+        socket.emit('bot reply', response);
+      } catch (err) {
+        console.error('Socket chat error:', err);
+        socket.emit('bot reply', {
+          message: 'Sorry, something went wrong. Please try again.',
+          error: true,
+        });
+      }
+    });
+
+    socket.on('disconnect', () => {
+      console.log('🔌 Client disconnected:', socket.id);
+    });
   });
 };
 

@@ -47,6 +47,7 @@ function normalizeRemotiveJob(job) {
     company: job.company_name || 'Unknown company',
     description: stripHtml(job.description),
     location: job.candidate_required_location || 'Remote',
+    candidate_required_location: job.candidate_required_location || 'Remote',
     salary: job.salary || 'Not disclosed',
     skills: normalizeSkills(job),
     type: normalizeJobType(job.job_type),

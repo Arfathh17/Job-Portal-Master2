@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { GlassCard, GlowButton, MaskedHeadline, MotionPage, NeonBadge } from '../components/PremiumUI';
 
 const DEMO_LOGIN = {
-  email: 'jobseeker@demo.com',
+  email: 'demo@afai.com',
   password: 'demo123',
 };
 
@@ -112,7 +112,7 @@ export default function Login() {
             <h2 className="afai-wordmark mt-5 overflow-hidden break-words text-3xl font-black leading-tight text-white sm:text-4xl sm:leading-none">Enter the talent atelier.</h2>
             <p className="mt-4 text-sm leading-6 text-slate-400">Continue your hiring pipeline, candidate journey, or AFAI interview session.</p>
             <p className="mt-3 rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-3 py-2 text-xs font-bold text-emerald-100">
-              Demo candidate login is prefilled. Click Login to enter.
+              Demo Account: prefilled with demo@afai.com / demo123. Click Login to enter.
             </p>
           </div>
 

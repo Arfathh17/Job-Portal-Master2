@@ -9,10 +9,15 @@ const router = express.Router();
 const allowedRoles = new Set(['candidate', 'recruiter', 'admin']);
 const demoLogin = {
   name: 'Alex Johnson',
-  email: 'jobseeker@demo.com',
+  email: 'demo@afai.com',
   password: 'demo123',
   role: 'candidate',
 };
+const demoEmailAliases = new Set([
+  demoLogin.email,
+  'jobseeker@demo.com',
+  'candidate@demo.com',
+]);
 
 function getUserSource() {
   if (getIsConnected()) {
@@ -27,13 +32,15 @@ function normalizeRequestedRole(role) {
 }
 
 function isDemoLogin(email, password) {
-  return String(email || '').toLowerCase().trim() === demoLogin.email
+  return demoEmailAliases.has(String(email || '').toLowerCase().trim())
     && password === demoLogin.password;
 }
 
 async function ensureDemoUser(source) {
+  const demoEmails = [...demoEmailAliases];
+
   if (source.type === 'mongo') {
-    let user = await source.model.findOne({ email: demoLogin.email });
+    let user = await source.model.findOne({ email: { $in: demoEmails } });
     if (!user) {
       return source.model.create(demoLogin);
     }
@@ -43,7 +50,8 @@ async function ensureDemoUser(source) {
       : await bcrypt.compare(demoLogin.password, user.password);
 
     if (!hasDemoPassword || normalizeRole(user.role) !== demoLogin.role) {
-      user.name = user.name || demoLogin.name;
+      user.name = demoLogin.name;
+      user.email = demoLogin.email;
       user.password = demoLogin.password;
       user.role = demoLogin.role;
       await user.save();
@@ -52,8 +60,18 @@ async function ensureDemoUser(source) {
     return user;
   }
 
-  const existing = await source.store.findByEmail(demoLogin.email);
-  return existing || source.store.create(demoLogin);
+  for (const email of demoEmails) {
+    const existing = await source.store.findByEmail(email);
+    if (existing) {
+      existing.name = demoLogin.name;
+      existing.email = demoLogin.email;
+      existing.role = demoLogin.role;
+      existing.password = await bcrypt.hash(demoLogin.password, 10);
+      return existing;
+    }
+  }
+
+  return source.store.create(demoLogin);
 }
 
 function signToken(user) {
@@ -136,6 +154,10 @@ router.post('/login', async (req, res) => {
 
     if (isDemoLogin(email, password)) {
       user = await ensureDemoUser(source);
+      return res.json({
+        token: signToken(user),
+        user: safeUser(user),
+      });
     }
 
     if (!user) {

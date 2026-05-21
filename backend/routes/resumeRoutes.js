@@ -43,7 +43,6 @@ const upload = multer({
  */
 router.post(
   '/analyze-text',
-  authMiddleware,
   (req, res) => resumeController.analyzeResumeText(req, res)
 );
 
